@@ -7,6 +7,7 @@ module Util
     format,
     addSep,
     locale,
+    makePad,
   )
 where
 
@@ -47,12 +48,15 @@ format = Fmt.formatTime locale
 addSep :: [I.Image] -> [I.Image]
 addSep = intersperse (I.string Attr.defAttr " ")
 
+makePad :: Int -> Int -> I.Image
+makePad = I.charFill Attr.defAttr ' '
+
 horizPad :: Int -> Bool -> I.Image -> I.Image
 horizPad w padLeft i =
   let diff = w - I.imageWidth i
       comb = if padLeft then I.horizJoin else flip I.horizJoin
    in if diff > 0
-        then I.charFill Attr.defAttr ' ' diff 1 `comb` i
+        then makePad diff 1 `comb` i
         else i
 
 horizCenter :: Int -> I.Image -> I.Image
@@ -61,8 +65,5 @@ horizCenter w img =
       ldiff = floor (diff / 2)
       rdiff = ceiling (diff / 2)
    in if diff > 0
-        then pad ldiff I.<|> img I.<|> pad rdiff
+        then makePad ldiff 1 I.<|> img I.<|> makePad rdiff 1
         else img
-  where
-    pad :: Int -> I.Image
-    pad s = I.charFill Attr.defAttr ' ' s 1
