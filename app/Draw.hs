@@ -1,4 +1,4 @@
-module Draw (drawMonth, weekWidth) where
+module Draw (drawMonth, weekWidth, monthHeight) where
 
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month)
@@ -9,6 +9,9 @@ import Util (Weeks, addSep, format, horizCenter, horizPad, locale, monthWeeks)
 
 weekWidth :: Int
 weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
+
+monthHeight :: Int
+monthHeight = 7
 
 drawDay :: Cal.Day -> Bool -> I.Image
 drawDay day curDay =
