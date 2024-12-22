@@ -17,7 +17,8 @@ padWeekDays diff = I.charFill Attr.defAttr ' ' (diff + 2 * diff) 1
 
 drawWeeks :: Cal.Day -> Weeks -> I.Image
 drawWeeks curDay w@((fd : _) : _) =
-  padWeekDays (Cal.dayOfWeekDiff startOfWeek $ Cal.dayOfWeek fd) I.<-> drawWeeks' w
+  let diff = Cal.dayOfWeekDiff startOfWeek $ Cal.dayOfWeek fd
+    in padWeekDays diff I.<-> drawWeeks' w
   where
     drawWeeks' :: Weeks -> I.Image
     drawWeeks' weeks = I.vertCat $ map drawWeek weeks
