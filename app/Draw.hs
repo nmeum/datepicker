@@ -6,48 +6,35 @@ import Data.Time.Calendar.Month (Month)
 import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
-import Util (Weeks)
+import Util (Weeks, horizCenter, horizPad)
 
 weekWidth :: Int
 weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
 
+drawDay :: Cal.Day -> Bool -> I.Image
+drawDay day curDay =
+  let attr = if curDay then high else Attr.defAttr
+   in I.string attr $ Fmt.formatTime Fmt.defaultTimeLocale "%_2e" day
+  where
+    high :: Attr.Attr
+    high =
+      Attr.defAttr
+        `Attr.withBackColor` Attr.white
+        `Attr.withForeColor` Attr.black
+
 drawWeeks :: Cal.Day -> Weeks -> I.Image
 drawWeeks curDay w =
   I.vertCat $
-    map (\(i, e) -> padWeekImg (i == 0) e) (zip [0 ..] $ map drawWeek w)
+    map (\(i, e) -> horizPad weekWidth (i == 0) e) $
+      zip [0 ..] (map drawWeek w :: [(Int, I.Image)])
   where
-    padWeekImg :: Bool -> I.Image -> I.Image
-    padWeekImg padLeft i =
-      let diff = weekWidth - I.imageWidth i
-          comb = if padLeft then I.horizJoin else (flip I.horizJoin)
-       in if diff > 0
-            then I.charFill Attr.defAttr ' ' diff 1 `comb` i
-            else i
-
-    fmtDay :: Cal.Day -> String
-    fmtDay = Fmt.formatTime Fmt.defaultTimeLocale "%_2e"
-
-    drawDay :: Cal.Day -> I.Image
-    drawDay day = I.string attr $ fmtDay day
-      where
-        attr =
-          if day == curDay
-            then Attr.defAttr `Attr.withBackColor` Attr.white `Attr.withForeColor` Attr.black
-            else Attr.defAttr
-
     drawWeek :: [Cal.Day] -> I.Image
-    drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
+    drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map (\d -> drawDay d (d == curDay)) days)
 
 drawMonth :: Month -> I.Image
 drawMonth m =
-  let img = I.string Attr.defAttr fmt
-      diff = fromIntegral $ weekWidth - I.imageWidth img
-   in if diff > 0
-        then
-          let ldiff = floor (diff / 2)
-              rdiff = ceiling (diff / 2)
-           in I.charFill Attr.defAttr ' ' ldiff 1 I.<|> img I.<|> I.charFill Attr.defAttr ' ' rdiff 1
-        else img
+  horizCenter weekWidth $
+    I.string Attr.defAttr fmt
   where
     fmt = Fmt.formatTime Fmt.defaultTimeLocale "%B %Y" m
 
