@@ -41,8 +41,8 @@ monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
 padWeekDays :: Int -> I.Image
 padWeekDays diff = I.charFill Attr.defAttr ' ' (diff + 2 * diff) 1
 
-drawWeeks :: Weeks -> I.Image
-drawWeeks w@((fd : _) : _) =
+drawWeeks :: Cal.Day -> Weeks -> I.Image
+drawWeeks curDay w@((fd : _) : _) =
   padWeekDays (Cal.dayOfWeekDiff startOfWeek $ Cal.dayOfWeek fd) I.<-> drawWeeks' w
   where
     drawWeeks' :: Weeks -> I.Image
@@ -51,20 +51,28 @@ drawWeeks w@((fd : _) : _) =
     fmtDay :: Cal.Day -> String
     fmtDay = Fmt.formatTime Fmt.defaultTimeLocale "%_2e"
 
+    drawDay :: Cal.Day -> I.Image
+    drawDay day = I.string attr $ fmtDay day
+      where
+        attr =
+          if day == curDay
+            then Attr.defAttr `Attr.withBackColor` Attr.white `Attr.withForeColor` Attr.black
+            else Attr.defAttr
+
     drawWeek :: [Cal.Day] -> I.Image
-    drawWeek days = foldl1 (I.<|>) (map (I.string Attr.defAttr) (intersperse " " $ map fmtDay days))
-drawWeeks _ = error "invalid weeks"
+    drawWeek days = foldl1 (I.<|>) (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
+drawWeeks _ _ = error "invalid weeks"
 
 drawMonth' :: Month -> I.Image
 drawMonth' m = I.string Attr.defAttr fmt
   where
     fmt = Fmt.formatTime Fmt.defaultTimeLocale "%B - %Y" m
 
-drawMonth :: Month -> I.Image
-drawMonth m = drawMonth' m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> weeks
+drawMonth :: Cal.Day -> Month -> I.Image
+drawMonth curDay m = drawMonth' m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> weeks
   where
     weeks :: I.Image
-    weeks = drawWeeks (monthWeeks m)
+    weeks = drawWeeks curDay (monthWeeks m)
 
 drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
@@ -85,7 +93,8 @@ main = do
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
   let out = V.outputIface vty
-      img = drawMonth (monthFromTime localTime)
+      day = localDay localTime
+      img = drawMonth day (monthFromTime localTime)
       pic = V.picForImage img
   V.setCursorPos out 1 1
   V.update vty pic
