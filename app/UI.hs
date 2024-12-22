@@ -10,7 +10,7 @@ import Data.Time.Format qualified as Fmt
 import Data.Time.LocalTime (LocalTime, localDay)
 import Draw (drawHeader, drawMonth, drawWeeks)
 import Graphics.Vty.Image qualified as I
-import Graphics.Vty.Input.Events (Event)
+import Graphics.Vty.Input.Events qualified as E
 import Util (monthWeeks)
 
 data MonthView = MonthView
@@ -34,5 +34,9 @@ drawView MonthView {curDay = d, curMonth = m} =
     weeks = drawWeeks d (monthWeeks m)
 
 -- Need to invoke 'drawView' after to obtain an updated image.
-processKey :: MonthView -> Event -> MonthView
+processKey :: MonthView -> E.Event -> Maybe MonthView
+processKey view (E.EvKey key _mods) =
+  case key of
+    E.KEsc -> Nothing
+    _ -> Just view
 processKey _ _ = error "not implemented"
