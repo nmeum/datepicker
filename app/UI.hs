@@ -16,13 +16,14 @@ import Util (addWeeks, monthWeeks)
 
 data MonthView = MonthView
   { curMonth :: Month,
-    curDay :: Cal.Day
+    curDay :: Cal.Day,
+    outFmt :: String
   }
 
-mkMonthView :: LocalTime -> MonthView
-mkMonthView time =
+mkMonthView :: LocalTime -> String -> MonthView
+mkMonthView time fmt =
   let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
-   in MonthView (YearMonth year my) day
+   in MonthView (YearMonth year my) day fmt
   where
     day = localDay time
     (year, yd) = toOrdinalDate day
@@ -36,15 +37,16 @@ drawView MonthView {curDay = d, curMonth = m} =
 
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
-processEvent :: MonthView -> E.Event -> Maybe MonthView
-processEvent view (E.EvKey key _mods) =
+processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) String
+processEvent view@MonthView {curDay = day, outFmt = fmt} (E.EvKey key _mods) =
   case key of
-    E.KUp -> moveDay view (addWeeks (-1))
-    E.KDown -> moveDay view (addWeeks 1)
-    E.KRight -> moveDay view (Cal.addDays 1)
-    E.KLeft -> moveDay view (Cal.addDays (-1))
-    _ -> Nothing
-processEvent view (E.EvResize _ _) = Just view
+    E.KEnter -> Right $ Fmt.formatTime Fmt.defaultTimeLocale fmt day
+    E.KUp -> Left $ moveDay view (addWeeks (-1))
+    E.KDown -> Left $ moveDay view (addWeeks 1)
+    E.KRight -> Left $ moveDay view (Cal.addDays 1)
+    E.KLeft -> Left $ moveDay view (Cal.addDays (-1))
+    _ -> Left Nothing
+processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------

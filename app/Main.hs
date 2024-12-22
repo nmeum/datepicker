@@ -1,10 +1,12 @@
 module Main where
 
 import Control.Monad (when)
+import Data.Maybe (fromMaybe, isJust)
 import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVty)
+import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import UI qualified
 
@@ -24,11 +26,17 @@ inputLoop view vty redraw = do
   if isTermEvent e
     then V.shutdown vty >> exitFailure
     else case UI.processEvent view e of
-      Just newView -> inputLoop newView vty True
-      Nothing -> inputLoop view vty False
+      Right output -> V.shutdown vty >> putStrLn output
+      Left mv -> inputLoop (fromMaybe view mv) vty (isJust mv)
 
 main :: IO ()
 main = do
+  args <- getArgs
   vty <- mkVty V.defaultConfig
+
+  let fmt = case args of
+        [] -> "%F"
+        x : _ -> x
+
   localTime <- zonedTimeToLocalTime <$> getZonedTime
-  inputLoop (UI.mkMonthView localTime) vty True
+  inputLoop (UI.mkMonthView localTime fmt) vty True
