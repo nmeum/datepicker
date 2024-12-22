@@ -56,9 +56,9 @@ drawWeeks w@((fd : _) : _) =
 drawWeeks _ = error "invalid weeks"
 
 drawMonth' :: Month -> I.Image
-drawMonth' m = I.string attr (Fmt.formatTime Fmt.defaultTimeLocale "%B" m)
+drawMonth' m = I.string Attr.defAttr fmt
   where
-    attr = Attr.defAttr `Attr.withForeColor` Attr.green
+    fmt = Fmt.formatTime Fmt.defaultTimeLocale "%B - %Y" m
 
 drawMonth :: Month -> I.Image
 drawMonth m = drawMonth' m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> weeks
