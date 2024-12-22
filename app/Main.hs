@@ -2,6 +2,7 @@
 
 module Main where
 
+import System.Exit (exitFailure)
 import Control.Monad (when)
 import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
@@ -23,7 +24,7 @@ inputLoop view vty redraw = do
 
   e <- V.nextEvent vty
   if isTermEvent e
-    then V.shutdown vty
+    then V.shutdown vty >> exitFailure
     else case UI.processEvent view e of
       Just newView -> inputLoop newView vty True
       Nothing -> inputLoop view vty False
