@@ -1,7 +1,18 @@
-module Util (Weeks, monthWeeks, addWeeks, horizPad, horizCenter) where
+module Util
+  ( Weeks,
+    monthWeeks,
+    addWeeks,
+    horizPad,
+    horizCenter,
+    format,
+    addSep,
+  )
+where
 
+import Data.List (intersperse)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month)
+import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 
@@ -24,6 +35,12 @@ addWeeks :: Integer -> Cal.Day -> Cal.Day
 addWeeks n = Cal.addDays (n * 7)
 
 ------------------------------------------------------------------------
+
+format :: (Fmt.FormatTime t) => String -> t -> String
+format = Fmt.formatTime Fmt.defaultTimeLocale
+
+addSep :: [I.Image] -> [I.Image]
+addSep = intersperse (I.string Attr.defAttr " ")
 
 horizPad :: Int -> Bool -> I.Image -> I.Image
 horizPad w padLeft i =

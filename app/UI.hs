@@ -12,7 +12,7 @@ import Data.Time.LocalTime (LocalTime, localDay)
 import Draw (drawHeader, drawMonth, drawWeeks)
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
-import Util (addWeeks, monthWeeks)
+import Util (addWeeks, format, monthWeeks)
 
 data MonthView = MonthView
   { curMonth :: Month,
@@ -40,7 +40,7 @@ drawView MonthView {curDay = d, curMonth = m} =
 processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) String
 processEvent view@MonthView {curDay = day, outFmt = fmt} (E.EvKey key _mods) =
   case key of
-    E.KEnter -> Right $ Fmt.formatTime Fmt.defaultTimeLocale fmt day
+    E.KEnter -> Right $ format fmt day
     E.KUp -> Left $ moveDay view (addWeeks (-1))
     E.KDown -> Left $ moveDay view (addWeeks 1)
     E.KRight -> Left $ moveDay view (Cal.addDays 1)
