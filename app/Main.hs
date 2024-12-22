@@ -12,19 +12,20 @@ import System.IO (hPutStrLn, stderr)
 import UI qualified
 import UI.Month qualified as M
 import UI.Time qualified as T
-import Util (format)
+import Util (format, horizCenter)
 
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
   key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
-showView :: (UI.View a) => a -> V.Vty -> IO (Maybe LocalTime)
-showView v t = showView' v t True
+showView :: (UI.View a) => a -> V.Vty -> V.DisplayRegion -> IO (Maybe LocalTime)
+showView v t r = showView' v t r True
  where
-  showView' view vty redraw = do
+  showView' view vty region redraw = do
     when redraw $ do
-      let img = UI.draw view
+      let (w, _h) = (V.regionWidth region, V.regionHeight region)
+          img = horizCenter w $ UI.draw view
           pic = V.picForImage img
       V.update vty pic
 
@@ -33,7 +34,7 @@ showView v t = showView' v t True
       then pure Nothing
       else case UI.process view e of
         Right output -> pure $ Just output
-        Left mv -> showView' (fromMaybe view mv) vty (isJust mv)
+        Left mv -> showView' (fromMaybe view mv) vty region (isJust mv)
 
 main :: IO ()
 main = do
@@ -52,11 +53,14 @@ main = do
   vty <- mkVty V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  maybeDate <- showView (M.mkMonthView localTime) vty
+  let out = V.outputIface vty
+  region <- V.displayBounds out
+
+  maybeDate <- showView (M.mkMonthView localTime) vty region
   case maybeDate of
     Nothing -> V.shutdown vty >> exitFailure
     (Just l@(LocalTime date _)) -> do
-      maybeTime <- showView T.mkTimeView vty
+      maybeTime <- showView T.mkTimeView vty region
       V.shutdown vty
 
       putStrLn $ case maybeTime of
