@@ -2,6 +2,7 @@
 
 module UI (MonthView, mkMonthView, drawView, processEvent) where
 
+import Data.Bool (bool)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, pattern YearMonth)
 import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
@@ -33,17 +34,22 @@ drawView MonthView {curDay = d, curMonth = m} =
     weeks :: I.Image
     weeks = drawWeeks d (monthWeeks m)
 
--- Need to invoke 'drawView' after to obtain an updated image.
+-- The return value specifies if the view has changed as a result
+-- of processing the event, if so, 'drawView' needs to be invoked.
 processEvent :: MonthView -> E.Event -> Maybe MonthView
 processEvent view (E.EvKey key _mods) =
   case key of
     E.KEsc -> Nothing
-    E.KRight -> Just $ incDay view
+    E.KRight -> incDay view
     _ -> Just view
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
 
--- TODO: Requires in-month bounds check
-incDay :: MonthView -> MonthView
-incDay mv@MonthView {curDay = d} = mv {curDay = Cal.addDays 1 d}
+hasDay :: MonthView -> Cal.Day -> Bool
+hasDay MonthView{ curMonth = m } d = Cal.dayPeriod d == m
+
+incDay :: MonthView -> Maybe MonthView
+incDay mv@MonthView {curDay = d} =
+  let nextDay = Cal.addDays 1 d in
+    bool Nothing (Just mv { curDay = nextDay }) (hasDay mv nextDay)
