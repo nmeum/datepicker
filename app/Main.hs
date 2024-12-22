@@ -2,10 +2,10 @@
 
 module Main where
 
-import UI qualified as UI
 import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Platform.Unix (mkVty)
+import UI qualified as UI
 
 main :: IO ()
 main = do
