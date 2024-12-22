@@ -38,5 +38,12 @@ processKey :: MonthView -> E.Event -> Maybe MonthView
 processKey view (E.EvKey key _mods) =
   case key of
     E.KEsc -> Nothing
+    E.KRight -> Just $ incDay view
     _ -> Just view
 processKey _ _ = error "not implemented"
+
+------------------------------------------------------------------------
+
+-- TODO: Requires in-month bounds check
+incDay :: MonthView -> MonthView
+incDay mv@MonthView {curDay = d} = mv {curDay = Cal.addDays 1 d}
