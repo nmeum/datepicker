@@ -39,9 +39,11 @@ drawView MonthView {curDay = d, curMonth = m} =
 processEvent :: MonthView -> E.Event -> Maybe MonthView
 processEvent view (E.EvKey key _mods) =
   case key of
-    E.KEsc -> Nothing
-    E.KRight -> incDay view
-    _ -> Just view
+    E.KUp -> moveDay view (Cal.addDays (-7))
+    E.KDown -> moveDay view (Cal.addDays 7)
+    E.KRight -> moveDay view (Cal.addDays 1)
+    E.KLeft -> moveDay view (Cal.addDays (-1))
+    _ -> Nothing
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
@@ -49,7 +51,7 @@ processEvent _ _ = error "not implemented"
 hasDay :: MonthView -> Cal.Day -> Bool
 hasDay MonthView{ curMonth = m } d = Cal.dayPeriod d == m
 
-incDay :: MonthView -> Maybe MonthView
-incDay mv@MonthView {curDay = d} =
-  let nextDay = Cal.addDays 1 d in
-    bool Nothing (Just mv { curDay = nextDay }) (hasDay mv nextDay)
+moveDay :: MonthView -> (Cal.Day -> Cal.Day) -> Maybe MonthView
+moveDay mv@MonthView{curDay = d} proc =
+  let newDay = proc d in
+    bool Nothing (Just mv { curDay = newDay }) (hasDay mv newDay)
