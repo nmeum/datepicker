@@ -24,10 +24,11 @@ drawDay day curDay =
 
 drawWeeks :: Cal.Day -> Weeks -> I.Image
 drawWeeks curDay w =
-  I.vertCat $
-    map (\(i, e) -> horizPad weekWidth (i == 0) e) $
-      zip [0 ..] (map drawWeek w :: [(Int, I.Image)])
+  I.vertCat $ zipWith zipFunc [0 ..] (map drawWeek w)
   where
+    zipFunc :: Int -> I.Image -> I.Image
+    zipFunc i = horizPad weekWidth (i == 0)
+
     drawWeek :: [Cal.Day] -> I.Image
     drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map (\d -> drawDay d (d == curDay)) days)
 
