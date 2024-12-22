@@ -12,17 +12,17 @@ weekWidth :: Int
 weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
 
 drawWeeks :: Cal.Day -> Weeks -> I.Image
-drawWeeks curDay w = I.vertCat $
-    map (\(i, e) -> padWeekImg (i == 0) e) (zip [0..] $ map drawWeek w)
+drawWeeks curDay w =
+  I.vertCat $
+    map (\(i, e) -> padWeekImg (i == 0) e) (zip [0 ..] $ map drawWeek w)
   where
     padWeekImg :: Bool -> I.Image -> I.Image
     padWeekImg padLeft i =
       let diff = weekWidth - I.imageWidth i
           comb = if padLeft then I.horizJoin else (flip I.horizJoin)
-       in
-        if diff > 0
-          then I.charFill Attr.defAttr ' ' diff 1 `comb` i
-          else i
+       in if diff > 0
+            then I.charFill Attr.defAttr ' ' diff 1 `comb` i
+            else i
 
     fmtDay :: Cal.Day -> String
     fmtDay = Fmt.formatTime Fmt.defaultTimeLocale "%_2e"
@@ -39,9 +39,17 @@ drawWeeks curDay w = I.vertCat $
     drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
 
 drawMonth :: Month -> I.Image
-drawMonth m = I.string Attr.defAttr fmt
+drawMonth m =
+  let img = I.string Attr.defAttr fmt
+      diff = fromIntegral $ weekWidth - I.imageWidth img
+   in if diff > 0
+        then
+          let ldiff = floor (diff / 2)
+              rdiff = ceiling (diff / 2)
+           in I.charFill Attr.defAttr ' ' ldiff 1 I.<|> img I.<|> I.charFill Attr.defAttr ' ' rdiff 1
+        else img
   where
-    fmt = Fmt.formatTime Fmt.defaultTimeLocale "%B - %Y" m
+    fmt = Fmt.formatTime Fmt.defaultTimeLocale "%B %Y" m
 
 drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
