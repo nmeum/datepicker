@@ -5,9 +5,9 @@ module Main where
 import Control.Monad (when)
 import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
+import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVty)
 import UI qualified as UI
-import Graphics.Vty.Input.Events qualified as E
 
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
@@ -25,8 +25,8 @@ inputLoop view vty redraw = do
   if isTermEvent e
     then V.shutdown vty
     else case UI.processEvent view e of
-          Just newView -> inputLoop newView vty True
-          Nothing -> inputLoop view vty False
+      Just newView -> inputLoop newView vty True
+      Nothing -> inputLoop view vty False
 
 main :: IO ()
 main = do
