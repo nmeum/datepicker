@@ -64,7 +64,7 @@ drawWeeks curDay w@((fd : _) : _) =
   padWeekDays (Cal.dayOfWeekDiff startOfWeek $ Cal.dayOfWeek fd) I.<-> drawWeeks' w
   where
     drawWeeks' :: Weeks -> I.Image
-    drawWeeks' weeks = foldl1 (I.<->) $ map drawWeek weeks
+    drawWeeks' weeks = I.vertCat $ map drawWeek weeks
 
     fmtDay :: Cal.Day -> String
     fmtDay = Fmt.formatTime Fmt.defaultTimeLocale "%_2e"
@@ -78,7 +78,7 @@ drawWeeks curDay w@((fd : _) : _) =
             else Attr.defAttr
 
     drawWeek :: [Cal.Day] -> I.Image
-    drawWeek days = foldl1 (I.<|>) (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
+    drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
 drawWeeks _ _ = error "invalid weeks"
 
 drawMonth' :: Month -> I.Image
@@ -90,7 +90,7 @@ drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
   let wdays = map snd w
       items = map drawWeekDay $ intersperse " " (map shortenWeekDay wdays)
-   in foldl1 (I.<|>) items
+   in I.horizCat items
   where
     drawWeekDay :: String -> I.Image
     drawWeekDay wday = I.string Attr.defAttr wday
