@@ -6,8 +6,9 @@ import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVty)
-import System.Environment (getArgs)
+import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
 import UI qualified
 
 isTermEvent :: E.Event -> Bool
@@ -32,11 +33,17 @@ inputLoop view vty redraw = do
 main :: IO ()
 main = do
   args <- getArgs
-  vty <- mkVty V.defaultConfig
+  when (length args > 1) $ do
+    progName <- getProgName
+    hPutStrLn stderr $ "Usage: " ++ progName ++ " [FORMAT]"
+    hPutStrLn stderr ""
+    hPutStrLn stderr "Format documentation: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime"
+    exitFailure
 
   let fmt = case args of
         [] -> "%F"
         x : _ -> x
 
+  vty <- mkVty V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
   inputLoop (UI.mkMonthView localTime fmt) vty True
