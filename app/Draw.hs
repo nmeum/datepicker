@@ -1,4 +1,4 @@
-module Draw (drawMonth) where
+module Draw (drawMonth, weekWidth) where
 
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month)
