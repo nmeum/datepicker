@@ -1,11 +1,11 @@
-module Draw (drawHeader, drawMonth, drawWeeks) where
+module Draw (drawMonth) where
 
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month)
 import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
-import Util (Weeks, addSep, format, horizCenter, horizPad)
+import Util (Weeks, addSep, format, horizCenter, horizPad, locale, monthWeeks)
 
 weekWidth :: Int
 weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
@@ -33,10 +33,17 @@ drawWeeks curDay w =
       I.horizCat $
         addSep (map (\day -> drawDay day $ day == curDay) days)
 
-drawMonth :: Month -> I.Image
-drawMonth m =
+-- XXX: Unfortunately, 'MonthYear' does not implement 'FormatTime'.
+drawMonthYear :: Month -> I.Image
+drawMonthYear m =
   horizCenter weekWidth $
     I.string Attr.defAttr (format "%B %Y" m)
+
+drawMonth :: Month -> Cal.Day -> I.Image
+drawMonth m curDay = drawMonthYear m I.<-> drawHeader locale I.<-> weeks
+  where
+    weeks :: I.Image
+    weeks = drawWeeks curDay (monthWeeks m)
 
 drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =

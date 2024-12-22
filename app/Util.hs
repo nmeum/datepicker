@@ -6,6 +6,7 @@ module Util
     horizCenter,
     format,
     addSep,
+    locale,
   )
 where
 
@@ -36,8 +37,12 @@ addWeeks n = Cal.addDays (n * 7)
 
 ------------------------------------------------------------------------
 
+-- TODO: Make this configurable
+locale :: Fmt.TimeLocale
+locale = Fmt.defaultTimeLocale
+
 format :: (Fmt.FormatTime t) => String -> t -> String
-format = Fmt.formatTime Fmt.defaultTimeLocale
+format = Fmt.formatTime locale
 
 addSep :: [I.Image] -> [I.Image]
 addSep = intersperse (I.string Attr.defAttr " ")

@@ -7,12 +7,11 @@ import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, pattern YearMonth)
 import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
-import Data.Time.Format qualified as Fmt
 import Data.Time.LocalTime (LocalTime, localDay)
-import Draw (drawHeader, drawMonth, drawWeeks)
+import Draw (drawMonth)
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
-import Util (addWeeks, format, monthWeeks)
+import Util (addWeeks, format)
 
 data MonthView = MonthView
   { curMonth :: Month,
@@ -30,10 +29,7 @@ mkMonthView time fmt =
 
 drawView :: MonthView -> I.Image
 drawView MonthView {curDay = d, curMonth = m} =
-  drawMonth m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> weeks
-  where
-    weeks :: I.Image
-    weeks = drawWeeks d (monthWeeks m)
+  drawMonth m d
 
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
