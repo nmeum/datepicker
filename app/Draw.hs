@@ -8,20 +8,21 @@ import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Util (Weeks)
 
--- TODO: Make this configurable.
-startOfWeek :: Cal.DayOfWeek
-startOfWeek = Cal.Sunday
-
-padWeekDays :: Int -> I.Image
-padWeekDays diff = I.charFill Attr.defAttr ' ' (diff + 2 * diff) 1
+weekWidth :: Int
+weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
 
 drawWeeks :: Cal.Day -> Weeks -> I.Image
-drawWeeks curDay w@((fd : _) : _) =
-  let diff = Cal.dayOfWeekDiff startOfWeek $ Cal.dayOfWeek fd
-    in padWeekDays diff I.<-> drawWeeks' w
+drawWeeks curDay w = I.vertCat $
+    map (\(i, e) -> padWeekImg (i == 0) e) (zip [0..] $ map drawWeek w)
   where
-    drawWeeks' :: Weeks -> I.Image
-    drawWeeks' weeks = I.vertCat $ map drawWeek weeks
+    padWeekImg :: Bool -> I.Image -> I.Image
+    padWeekImg padLeft i =
+      let diff = weekWidth - I.imageWidth i
+          comb = if padLeft then I.horizJoin else (flip I.horizJoin)
+       in
+        if diff > 0
+          then I.charFill Attr.defAttr ' ' diff 1 `comb` i
+          else i
 
     fmtDay :: Cal.Day -> String
     fmtDay = Fmt.formatTime Fmt.defaultTimeLocale "%_2e"
@@ -36,7 +37,6 @@ drawWeeks curDay w@((fd : _) : _) =
 
     drawWeek :: [Cal.Day] -> I.Image
     drawWeek days = I.horizCat (intersperse (I.string Attr.defAttr " ") $ map drawDay days)
-drawWeeks _ _ = error "invalid weeks"
 
 drawMonth :: Month -> I.Image
 drawMonth m = I.string Attr.defAttr fmt
