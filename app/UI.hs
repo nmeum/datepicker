@@ -44,6 +44,7 @@ processEvent view (E.EvKey key _mods) =
     E.KRight -> moveDay view (Cal.addDays 1)
     E.KLeft -> moveDay view (Cal.addDays (-1))
     _ -> Nothing
+processEvent view (E.EvResize _ _) = Just view
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
