@@ -24,7 +24,7 @@ mkMonthView time =
   let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
    in MonthView (YearMonth year my) day
   where
-    day = (localDay time)
+    day = localDay time
     (year, yd) = toOrdinalDate day
 
 drawView :: MonthView -> I.Image

@@ -49,8 +49,8 @@ drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
    in I.horizCat items
   where
     drawWeekDay :: String -> I.Image
-    drawWeekDay wday = I.string Attr.defAttr wday
 
     shortenWeekDay :: String -> String
-    shortenWeekDay (f : s : _xs) = f : s : []
+    shortenWeekDay (f : s : _xs) = [f, s]
     shortenWeekDay s = s
+    drawWeekDay = I.string Attr.defAttr

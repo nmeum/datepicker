@@ -1,14 +1,12 @@
-{-# LANGUAGE PatternSynonyms #-}
-
 module Main where
 
-import System.Exit (exitFailure)
 import Control.Monad (when)
 import Data.Time.LocalTime (getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVty)
-import UI qualified as UI
+import System.Exit (exitFailure)
+import UI qualified
 
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
