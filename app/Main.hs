@@ -3,7 +3,7 @@
 module Main where
 
 import Data.List (intersperse)
-import Data.Time.Calendar (Day, DayPeriod, MonthOfYear, dayPeriod, isLeapYear, periodAllDays)
+import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, pattern YearMonth)
 import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
@@ -16,12 +16,12 @@ import Graphics.Vty.Platform.Unix (mkVty)
 
 monthFromTime :: LocalTime -> Month
 monthFromTime time =
-  let my = fst $ dayOfYearToMonthAndDay (isLeapYear year) yd
+  let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
    in YearMonth year my
   where
     (year, yd) = toOrdinalDate (localDay time)
 
-drawDay :: Day -> I.Image
+drawDay :: Cal.Day -> I.Image
 drawDay day = I.string attr (show day)
   where
     attr = Attr.defAttr `Attr.withForeColor` Attr.green
@@ -35,7 +35,7 @@ drawMonth :: Month -> I.Image
 drawMonth m = drawMonth' m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> days
   where
     days :: I.Image
-    days = foldl1 (I.<->) $ map drawDay (periodAllDays m)
+    days = foldl1 (I.<->) $ map drawDay (Cal.periodAllDays m)
 
 drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
