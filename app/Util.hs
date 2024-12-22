@@ -9,7 +9,7 @@ monthWeeks :: Month -> Weeks
 monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
   where
     weekOfDay :: Cal.Day -> [Cal.Day]
-    weekOfDay d = Cal.weekAllDays (Cal.dayOfWeek d) d
+    weekOfDay d = Cal.weekAllDays Cal.Sunday d
 
     monthWeeks' :: Cal.Day -> Weeks
     monthWeeks' d
