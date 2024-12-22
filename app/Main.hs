@@ -10,7 +10,8 @@ import UI qualified as UI
 import Graphics.Vty.Input.Events qualified as E
 
 isTermEvent :: E.Event -> Bool
-isTermEvent (E.EvKey key _) = key == E.KEsc
+isTermEvent (E.EvKey key _) =
+  key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
 inputLoop :: UI.MonthView -> V.Vty -> Bool -> IO ()
