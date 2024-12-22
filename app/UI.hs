@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module UI (MonthView, mkMonthView, drawView, processKey) where
+module UI (MonthView, mkMonthView, drawView, processEvent) where
 
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, pattern YearMonth)
@@ -34,13 +34,13 @@ drawView MonthView {curDay = d, curMonth = m} =
     weeks = drawWeeks d (monthWeeks m)
 
 -- Need to invoke 'drawView' after to obtain an updated image.
-processKey :: MonthView -> E.Event -> Maybe MonthView
-processKey view (E.EvKey key _mods) =
+processEvent :: MonthView -> E.Event -> Maybe MonthView
+processEvent view (E.EvKey key _mods) =
   case key of
     E.KEsc -> Nothing
     E.KRight -> Just $ incDay view
     _ -> Just view
-processKey _ _ = error "not implemented"
+processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
 

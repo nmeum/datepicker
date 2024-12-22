@@ -14,7 +14,7 @@ inputLoop view vty = do
   V.update vty pic
   e <- V.nextEvent vty
 
-  case UI.processKey view e of
+  case UI.processEvent view e of
     Just newView -> inputLoop newView vty
     _ -> V.shutdown vty
 
