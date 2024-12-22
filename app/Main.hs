@@ -1,6 +1,8 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Main where
 
+import Data.List (intersperse)
+
 import qualified Graphics.Vty as V
 import qualified Graphics.Vty.Image as I
 import qualified Graphics.Vty.Attributes as Attr
@@ -31,18 +33,33 @@ drawMonth' m = I.string attr (Fmt.formatTime Fmt.defaultTimeLocale "%B" m)
   attr = Attr.defAttr `Attr.withForeColor` Attr.green
 
 drawMonth :: Month -> I.Image
-drawMonth m = drawMonth' m I.<-> days
+drawMonth m = drawMonth' m I.<-> drawHeader Fmt.defaultTimeLocale I.<-> days
   where
    days :: I.Image
    days = foldl1 (I.<->) $ map drawDay (periodAllDays m)
+
+drawHeader :: Fmt.TimeLocale -> I.Image
+drawHeader Fmt.TimeLocale{Fmt.wDays=w} =
+  let wdays = map snd w
+      items = map drawWeekDay $ intersperse " " (map shortenWeekDay wdays)
+   in foldl1 (I.<|>) items
+ where
+  drawWeekDay :: String -> I.Image
+  drawWeekDay wday = I.string Attr.defAttr wday
+
+  shortenWeekDay :: String -> String
+  shortenWeekDay (f : s : _xs) = f : s : []
+  shortenWeekDay s = s
 
 main :: IO ()
 main = do
   vty <- mkVty V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  let img = drawMonth (monthFromTime localTime)
+  let out = V.outputIface vty
+      img = drawMonth (monthFromTime localTime)
       pic = V.picForImage img
+  V.setCursorPos out 1 1
   V.update vty pic
   e <- V.nextEvent vty
   V.shutdown vty
