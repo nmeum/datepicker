@@ -9,7 +9,8 @@ import Graphics.Vty.Input.Events qualified as E
 import Util (makePad)
 
 data TimeView = TimeView
-  { rawInput :: [Int] -- TODO: Use NonEmpty
+  { rawInput :: [Int], -- TODO: Use NonEmpty
+    position :: Int
   }
 
 type ClockGlyph = [[Int]]
@@ -94,7 +95,7 @@ clockFont =
   ]
 
 mkTimeView :: TimeView
-mkTimeView = TimeView [2, 3, 5, 9]
+mkTimeView = TimeView [2, 3, 5, 9] 0
 
 drawGlyph :: ClockGlyph -> I.Image
 drawGlyph glyph =
@@ -132,10 +133,8 @@ processInput v c
   | otherwise = Nothing
 
 cycleDigits :: TimeView -> Int -> TimeView
-cycleDigits v@TimeView {rawInput = input} n =
-  v
-    { rawInput =
-        if length input >= 4
-          then n : init input
-          else input ++ [n]
-    }
+cycleDigits v@TimeView {position = p, rawInput = input} n =
+  v { rawInput = newInput, position = (p + 1) `mod` length input }
+  where
+    newInput :: [Int]
+    newInput = zipWith (\e i -> if i == p then n else e) input [0 ..]
