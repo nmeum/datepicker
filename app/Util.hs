@@ -4,6 +4,7 @@ module Util
     addWeeks,
     horizPad,
     horizCenter,
+    vertCenter,
     format,
     addSep,
     locale,
@@ -66,4 +67,13 @@ horizCenter w img =
       rdiff = ceiling (diff / 2)
    in if diff > 0
         then makePad ldiff 1 I.<|> img I.<|> makePad rdiff 1
+        else img
+
+vertCenter :: Int -> I.Image -> I.Image
+vertCenter w img =
+  let diff = fromIntegral (w - I.imageHeight img) :: Double
+      tdiff = floor (diff / 2)
+      bdiff = ceiling (diff / 2)
+   in if diff > 0
+        then makePad 1 tdiff I.<-> img I.<-> makePad 1 bdiff
         else img

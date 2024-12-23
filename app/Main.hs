@@ -12,7 +12,7 @@ import System.IO (hPutStrLn, stderr)
 import UI qualified
 import UI.Month qualified as M
 import UI.Time qualified as T
-import Util (format, horizCenter)
+import Util (format, horizCenter, vertCenter)
 
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
@@ -24,8 +24,8 @@ showView v t r = showView' v t r True
  where
   showView' view vty region redraw = do
     when redraw $ do
-      let (w, _h) = (V.regionWidth region, V.regionHeight region)
-          img = horizCenter w $ UI.draw view
+      let (w, h) = (V.regionWidth region, V.regionHeight region)
+          img = horizCenter w $ vertCenter h $ UI.draw view
           pic = V.picForImage img
       V.update vty pic
 
