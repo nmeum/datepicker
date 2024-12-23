@@ -19,19 +19,21 @@ isTermEvent (E.EvKey key _) =
   key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
-showView :: (UI.View a) => a -> V.Vty -> Bool -> IO LocalTime
-showView view vty redraw = do
-  when redraw $ do
-    let img = UI.draw view
-        pic = V.picForImage img
-    V.update vty pic
+showView :: (UI.View a) => a -> V.Vty -> IO (Maybe LocalTime)
+showView v t = showView' v t True
+ where
+  showView' view vty redraw = do
+    when redraw $ do
+      let img = UI.draw view
+          pic = V.picForImage img
+      V.update vty pic
 
-  e <- V.nextEvent vty
-  if isTermEvent e
-    then V.shutdown vty >> exitFailure
-    else case UI.process view e of
-      Right output -> pure output
-      Left mv -> showView (fromMaybe view mv) vty (isJust mv)
+    e <- V.nextEvent vty
+    if isTermEvent e
+      then pure Nothing
+      else case UI.process view e of
+        Right output -> pure $ Just output
+        Left mv -> showView' (fromMaybe view mv) vty (isJust mv)
 
 main :: IO ()
 main = do
@@ -50,9 +52,14 @@ main = do
   vty <- mkVty V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  (LocalTime date _) <- showView (M.mkMonthView localTime) vty True
-  (LocalTime _ time) <- showView T.mkTimeView vty True
-  let newTime = LocalTime date time
+  maybeDate <- showView (M.mkMonthView localTime) vty
+  case maybeDate of
+    Nothing -> V.shutdown vty >> exitFailure
+    (Just l@(LocalTime date _)) -> do
+      maybeTime <- showView T.mkTimeView vty
+      V.shutdown vty
 
-  V.shutdown vty
-  putStrLn $ format outFmt newTime
+      putStrLn $ case maybeTime of
+        (Just (LocalTime _ time)) ->
+          format outFmt (LocalTime date time)
+        _ -> format outFmt l
