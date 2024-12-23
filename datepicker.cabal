@@ -20,7 +20,10 @@ executable datepicker
     import:           warnings
     ghc-options:      -threaded
     main-is:          Main.hs
-    other-modules:    UI, Draw, Util
+    other-modules:    UI.Month
+                    , UI.Time
+                    , Draw
+                    , Util
     build-depends:    base ^>=4.19.1.0
                     , time
                     , vty  ^>=6.2

@@ -9,24 +9,24 @@ import Graphics.Vty.Platform.Unix (mkVty)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
-import UI qualified
+import UI.Month qualified as M
 
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
   key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
-inputLoop :: UI.MonthView -> V.Vty -> Bool -> IO ()
+inputLoop :: M.MonthView -> V.Vty -> Bool -> IO ()
 inputLoop view vty redraw = do
   when redraw $ do
-    let img = UI.drawView view
+    let img = M.drawView view
         pic = V.picForImage img
     V.update vty pic
 
   e <- V.nextEvent vty
   if isTermEvent e
     then V.shutdown vty >> exitFailure
-    else case UI.processEvent view e of
+    else case M.processEvent view e of
       Right output -> V.shutdown vty >> putStrLn output
       Left mv -> inputLoop (fromMaybe view mv) vty (isJust mv)
 
@@ -46,4 +46,4 @@ main = do
 
   vty <- mkVty V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
-  inputLoop (UI.mkMonthView localTime fmt) vty True
+  inputLoop (M.mkMonthView localTime fmt) vty True

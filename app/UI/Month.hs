@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module UI (MonthView, mkMonthView, drawView, processEvent) where
+module UI.Month (MonthView, mkMonthView, drawView, processEvent) where
 
 import Data.Bool (bool)
 import Data.Time.Calendar qualified as Cal
