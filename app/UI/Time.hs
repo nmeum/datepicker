@@ -1,17 +1,22 @@
-module UI.Time (TimeView, mkTimeView, drawView, processEvent) where
+module UI.Time (digitWidth, digitHeight, TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
-import Data.List (intersperse)
-import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
+import Data.Time.Calendar qualified as Cal
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
+import UI (View (..))
 import Util (makePad)
 
 data TimeView = TimeView
   { rawInput :: [Int], -- TODO: Use NonEmpty
     position :: Int
   }
+
+instance View TimeView where
+  draw = drawView
+  process = processEvent
 
 type ClockGlyph = [[Int]]
 
@@ -109,10 +114,10 @@ drawView TimeView {rawInput = input} =
     colonSep :: I.Image
     colonSep = drawGlyph $ last clockFont
 
-processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) TimeOfDay
+processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
 processEvent view (E.EvKey key _mods) =
   case key of
-    E.KEnter -> Right $ getTimeOfDay view
+    E.KEnter -> Right $ LocalTime (Cal.ModifiedJulianDay 0) (getTimeOfDay view)
     E.KChar c -> Left $ processInput view c
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view

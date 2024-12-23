@@ -1,28 +1,32 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module UI.Month (MonthView, mkMonthView, drawView, processEvent) where
+module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, pattern YearMonth)
 import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
-import Data.Time.LocalTime (LocalTime, localDay)
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), localDay)
 import Draw (drawMonth, monthHeight, weekWidth)
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
-import Util (addWeeks, format, makePad)
+import UI (View (..))
+import Util (addWeeks, makePad)
 
 data MonthView = MonthView
   { curMonth :: Month,
-    curDay :: Cal.Day,
-    outFmt :: String
+    curDay :: Cal.Day
   }
 
-mkMonthView :: LocalTime -> String -> MonthView
-mkMonthView time fmt =
+instance View MonthView where
+  draw = drawView
+  process = processEvent
+
+mkMonthView :: LocalTime -> MonthView
+mkMonthView time =
   let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
-   in MonthView (YearMonth year my) day fmt
+   in MonthView (YearMonth year my) day
   where
     day = localDay time
     (year, yd) = toOrdinalDate day
@@ -33,10 +37,10 @@ drawView MonthView {curDay = d, curMonth = m} =
 
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
-processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) String
-processEvent view@MonthView {curDay = day, outFmt = fmt} (E.EvKey key _mods) =
+processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) LocalTime
+processEvent view@MonthView {curDay = day} (E.EvKey key _mods) =
   case key of
-    E.KEnter -> Right $ format fmt day
+    E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
     E.KUp -> Left $ moveDay view (addWeeks (-1))
     E.KDown -> Left $ moveDay view (addWeeks 1)
     E.KRight -> Left $ moveDay view (Cal.addDays 1)

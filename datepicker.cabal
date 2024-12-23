@@ -22,6 +22,7 @@ executable datepicker
     main-is:          Main.hs
     other-modules:    UI.Month
                     , UI.Time
+                    , UI
                     , Draw
                     , Util
     build-depends:    base ^>=4.19.1.0
