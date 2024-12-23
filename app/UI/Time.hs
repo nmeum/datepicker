@@ -112,7 +112,7 @@ drawView TimeView {rawInput = input} =
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) TimeOfDay
 processEvent view (E.EvKey key _mods) =
   case key of
-    E.KEnter -> Right $ TimeOfDay 23 59 00
+    E.KEnter -> Right $ getTimeOfDay view
     E.KChar c -> Left $ processInput view c
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
@@ -127,6 +127,14 @@ drawBlock = I.horizCat . map (\i -> I.string (attr i) " ")
       | i == 1 = Attr.defAttr `Attr.withBackColor` Attr.cyan
       | otherwise = Attr.defAttr
 
+getTimeOfDay :: TimeView -> TimeOfDay
+getTimeOfDay TimeView {rawInput = input} =
+  let (h, m) = splitAt 2 input
+   in TimeOfDay (toInt h) (toInt m) 0
+  where
+    toInt :: [Int] -> Int
+    toInt = read . foldr ((++) . show) ""
+
 processInput :: TimeView -> Char -> Maybe TimeView
 processInput v c
   | c >= '0' && c <= '9' = Just $ cycleDigits v (digitToInt c)
@@ -134,7 +142,7 @@ processInput v c
 
 cycleDigits :: TimeView -> Int -> TimeView
 cycleDigits v@TimeView {position = p, rawInput = input} n =
-  v { rawInput = newInput, position = (p + 1) `mod` length input }
+  v {rawInput = newInput, position = (p + 1) `mod` length input}
   where
     newInput :: [Int]
     newInput = zipWith (\e i -> if i == p then n else e) input [0 ..]
