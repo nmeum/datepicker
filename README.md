@@ -19,10 +19,10 @@ To install this utility clone the repository and run:
 ### Usage Example
 
 Presently, `datepicker` only supports a single command-line argument: The date format.
-This format must be specified using the format strings supported by [formatTime] function from Haskell's `time` library.
+This format must be specified using the format strings supported by the [formatTime] function from Haskell's `time` library.
 For example, in order to use this utility with [journalctl] you may invoke it as follows:
 
-	$ journalctl -S "$(datepicker '%Y-%m-%d %H:%M:%S')"
+	$ journalctl --since="$(datepicker '%Y-%m-%d %H:%M:%S')"
 
 The command-line interface is subject to change, more options will be added shortly.
 
