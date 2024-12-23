@@ -1,6 +1,6 @@
 module UI.Time (TimeView, mkTimeView, drawView, processEvent) where
 
-import Data.Char (digitToInt)
+import Data.Char (digitToInt, isDigit)
 import Data.List (intersperse)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Graphics.Vty.Attributes qualified as Attr
@@ -99,7 +99,7 @@ mkTimeView = TimeView [2, 3, 5, 9] 0
 
 drawGlyph :: ClockGlyph -> I.Image
 drawGlyph glyph =
-  (I.vertCat $ map drawBlock glyph) I.<|> makePad 1 digitHeight
+  I.vertCat (map drawBlock glyph) I.<|> makePad 1 digitHeight
 
 drawView :: TimeView -> I.Image
 drawView TimeView {rawInput = input} =
@@ -133,11 +133,11 @@ getTimeOfDay TimeView {rawInput = input} =
    in TimeOfDay (toInt h) (toInt m) 0
   where
     toInt :: [Int] -> Int
-    toInt = read . foldr ((++) . show) ""
+    toInt = read . concatMap show
 
 processInput :: TimeView -> Char -> Maybe TimeView
 processInput v c
-  | c >= '0' && c <= '9' = Just $ cycleDigits v (digitToInt c)
+  | isDigit c = Just $ cycleDigits v (digitToInt c)
   | otherwise = Nothing
 
 cycleDigits :: TimeView -> Int -> TimeView
