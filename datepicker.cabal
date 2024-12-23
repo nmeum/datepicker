@@ -27,6 +27,7 @@ executable datepicker
                     , Util
     build-depends:    base ^>=4.19.1.0
                     , time
+                    , unix
                     , vty  ^>=6.2
                     , vty-unix
     hs-source-dirs:   app

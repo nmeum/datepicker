@@ -5,10 +5,12 @@ import Data.Maybe (fromMaybe, isJust)
 import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
-import Graphics.Vty.Platform.Unix (mkVty)
+import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
+import Graphics.Vty.Platform.Unix.Settings (UnixSettings (settingInputFd, settingOutputFd), defaultSettings)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
+import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
 import UI qualified
 import UI.Month qualified as M
 import UI.Time qualified as T
@@ -21,20 +23,29 @@ isTermEvent _ = False
 
 showView :: (UI.View a) => a -> V.Vty -> V.DisplayRegion -> IO (Maybe LocalTime)
 showView v t r = showView' v t r True
- where
-  showView' view vty region redraw = do
-    when redraw $ do
-      let (w, h) = (V.regionWidth region, V.regionHeight region)
-          img = horizCenter w $ vertCenter h $ UI.draw view
-          pic = V.picForImage img
-      V.update vty pic
+  where
+    showView' view vty region redraw = do
+      when redraw $ do
+        let (w, h) = (V.regionWidth region, V.regionHeight region)
+            img = horizCenter w $ vertCenter h $ UI.draw view
+            pic = V.picForImage img
+        V.update vty pic
 
-    e <- V.nextEvent vty
-    if isTermEvent e
-      then pure Nothing
-      else case UI.process view e of
-        Right output -> pure $ Just output
-        Left mv -> showView' (fromMaybe view mv) vty region (isJust mv)
+      e <- V.nextEvent vty
+      if isTermEvent e
+        then pure Nothing
+        else case UI.process view e of
+          Right output -> pure $ Just output
+          Left mv -> showView' (fromMaybe view mv) vty region (isJust mv)
+
+-- Make sure we read and write to /dev/tty instead of relying on stdin/stdout.
+-- This allows using datepicker within pipes where stdin/stdout is redirected.
+unixSettings :: IO UnixSettings
+unixSettings = do
+  fd <- openFd "/dev/tty" ReadWrite defaultFileFlags
+
+  s <- defaultSettings
+  pure s {settingInputFd = fd, settingOutputFd = fd}
 
 main :: IO ()
 main = do
@@ -50,7 +61,7 @@ main = do
         [] -> "%c"
         x : _ -> x
 
-  vty <- mkVty V.defaultConfig
+  vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
   let out = V.outputIface vty
