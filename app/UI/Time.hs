@@ -2,7 +2,7 @@ module UI.Time (digitWidth, digitHeight, TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
 import Data.Time.Calendar qualified as Cal
-import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay, makeTimeOfDayValid)
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
@@ -116,11 +116,13 @@ drawView v@TimeView {initTime = t} =
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
 processEvent view (E.EvKey key _mods) =
   case key of
+    E.KChar c -> Left $ processInput view c
     E.KBS -> Left $ Just (moveCursor view (-1))
     E.KLeft -> Left $ Just (moveCursor view (-1))
     E.KRight -> Left $ Just (moveCursor view 1)
-    E.KEnter -> Right $ LocalTime (Cal.ModifiedJulianDay 0) (getTimeOfDay view)
-    E.KChar c -> Left $ processInput view c
+    E.KEnter -> case getTimeOfDay view of
+      Nothing -> Left Nothing -- TODO: Provide visual feedback
+      Just t -> Right $ LocalTime (Cal.ModifiedJulianDay 0) t
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = error "not implemented"
@@ -159,10 +161,10 @@ drawBlock blk attr = I.horizCat $ map (\i -> I.char (a i) ' ') blk
   where
     a i = if i == 1 then attr else Attr.defAttr
 
-getTimeOfDay :: TimeView -> TimeOfDay
+getTimeOfDay :: TimeView -> Maybe TimeOfDay
 getTimeOfDay TimeView {rawInput = input} =
   let (h, m) = splitAt 2 input
-   in TimeOfDay (toInt h) (toInt m) 0
+   in makeTimeOfDayValid (toInt h) (toInt m) 0
   where
     toInt :: [Int] -> Int
     toInt = read . concatMap show
