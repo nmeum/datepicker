@@ -124,24 +124,33 @@ processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
 
-drawGlyph :: ClockGlyph -> I.Image
-drawGlyph glyph =
-  I.vertCat (map drawBlock glyph) I.<|> makePad 1 digitHeight
+drawGlyph :: ClockGlyph -> Attr.Attr -> I.Image
+drawGlyph glyph attr =
+  I.vertCat (map (`drawBlock` attr) glyph)
+    I.<|> makePad 1 digitHeight
 
 drawClock :: TimeView -> I.Image
-drawClock TimeView {rawInput = input} =
-  let (h, m) = splitAt 2 $ map (\d -> drawGlyph $ clockFont !! d) input
+drawClock TimeView {position = curPos, rawInput = input} =
+  let (h, m) = splitAt 2 $ zipWith drawDigit [0 ..] input
    in I.horizCat h I.<|> colonSep I.<|> I.horizCat m
   where
-    colonSep :: I.Image
-    colonSep = drawGlyph $ last clockFont
+    defAttr :: Attr.Attr
+    defAttr = Attr.defAttr `Attr.withBackColor` Attr.cyan
 
-drawBlock :: [Int] -> I.Image
-drawBlock = I.horizCat . map (\i -> I.string (attr i) " ")
+    drawDigit :: Int -> Int -> I.Image
+    drawDigit idx digit =
+      drawGlyph (clockFont !! digit) $
+        if idx == curPos
+          then defAttr `Attr.withBackColor` Attr.magenta
+          else defAttr
+
+    colonSep :: I.Image
+    colonSep = drawGlyph (last clockFont) defAttr
+
+drawBlock :: [Int] -> Attr.Attr -> I.Image
+drawBlock blk attr = I.horizCat $ map (\i -> I.char (a i) ' ') blk
   where
-    attr i
-      | i == 1 = Attr.defAttr `Attr.withBackColor` Attr.cyan
-      | otherwise = Attr.defAttr
+    a i = if i == 1 then attr else Attr.defAttr
 
 getTimeOfDay :: TimeView -> TimeOfDay
 getTimeOfDay TimeView {rawInput = input} =
