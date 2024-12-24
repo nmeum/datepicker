@@ -11,7 +11,7 @@ import Util (format, horizCenter, makePad)
 
 data TimeView = TimeView
   { rawInput :: [Int], -- TODO: Use NonEmpty
-    position :: Int,
+    position :: Word,
     initTime :: LocalTime
   }
 
@@ -114,9 +114,9 @@ drawView v@TimeView {initTime = t} =
         I.<-> drawClock v
 
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
-processEvent view@TimeView { position = p } (E.EvKey key _mods) =
+processEvent view (E.EvKey key _mods) =
   case key of
-    E.KBS -> Left $ Just view { position = if p > 0 then p - 1 else 0 }
+    E.KBS -> Left $ Just (moveCursor view (-1))
     E.KEnter -> Right $ LocalTime (Cal.ModifiedJulianDay 0) (getTimeOfDay view)
     E.KChar c -> Left $ processInput view c
     _ -> Left Nothing
@@ -124,6 +124,11 @@ processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
+
+moveCursor :: TimeView -> Int -> TimeView
+moveCursor view@TimeView {rawInput = input, position = p} off =
+  let len = fromIntegral $ length input
+   in view {position = (p + fromIntegral off) `mod` len}
 
 drawGlyph :: ClockGlyph -> Attr.Attr -> I.Image
 drawGlyph glyph attr =
@@ -138,7 +143,6 @@ drawClock TimeView {position = curPos, rawInput = input} =
     defAttr :: Attr.Attr
     defAttr = Attr.defAttr `Attr.withBackColor` Attr.cyan
 
-    drawDigit :: Int -> Int -> I.Image
     drawDigit idx digit =
       drawGlyph (clockFont !! digit) $
         if idx == curPos
@@ -168,7 +172,8 @@ processInput v c
 
 cycleDigits :: TimeView -> Int -> TimeView
 cycleDigits v@TimeView {position = p, rawInput = input} n =
-  v {rawInput = newInput, position = (p + 1) `mod` length input}
+  let newView = moveCursor v 1
+   in newView {rawInput = newInput}
   where
     newInput :: [Int]
     newInput = zipWith (\e i -> if i == p then n else e) input [0 ..]
