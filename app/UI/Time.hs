@@ -7,11 +7,12 @@ import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
 import UI (View (..))
-import Util (makePad)
+import Util (format, horizCenter, makePad)
 
 data TimeView = TimeView
   { rawInput :: [Int], -- TODO: Use NonEmpty
-    position :: Int
+    position :: Int,
+    initTime :: LocalTime
   }
 
 instance View TimeView where
@@ -25,6 +26,9 @@ digitWidth = 5
 
 digitHeight :: Int
 digitHeight = 5
+
+clockWidth :: Int
+clockWidth = digitWidth * 5 + 4
 
 -- Shamelessly stolen from the tmux clock-mode.
 --
@@ -99,20 +103,15 @@ clockFont =
     ]
   ]
 
-mkTimeView :: TimeView
+mkTimeView :: LocalTime -> TimeView
 mkTimeView = TimeView [2, 3, 5, 9] 0
 
-drawGlyph :: ClockGlyph -> I.Image
-drawGlyph glyph =
-  I.vertCat (map drawBlock glyph) I.<|> makePad 1 digitHeight
-
 drawView :: TimeView -> I.Image
-drawView TimeView {rawInput = input} =
-  let (h, m) = splitAt 2 $ map (\d -> drawGlyph $ clockFont !! d) input
-   in I.horizCat h I.<|> colonSep I.<|> I.horizCat m
-  where
-    colonSep :: I.Image
-    colonSep = drawGlyph $ last clockFont
+drawView v@TimeView {initTime = t} =
+  let str = format "%-d %B, %Y" t
+   in horizCenter clockWidth (I.string Attr.defAttr str)
+        I.<-> makePad clockWidth 1
+        I.<-> drawClock v
 
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
 processEvent view (E.EvKey key _mods) =
@@ -124,6 +123,18 @@ processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = error "not implemented"
 
 ------------------------------------------------------------------------
+
+drawGlyph :: ClockGlyph -> I.Image
+drawGlyph glyph =
+  I.vertCat (map drawBlock glyph) I.<|> makePad 1 digitHeight
+
+drawClock :: TimeView -> I.Image
+drawClock TimeView {rawInput = input} =
+  let (h, m) = splitAt 2 $ map (\d -> drawGlyph $ clockFont !! d) input
+   in I.horizCat h I.<|> colonSep I.<|> I.horizCat m
+  where
+    colonSep :: I.Image
+    colonSep = drawGlyph $ last clockFont
 
 drawBlock :: [Int] -> I.Image
 drawBlock = I.horizCat . map (\i -> I.string (attr i) " ")
