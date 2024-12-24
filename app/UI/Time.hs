@@ -114,8 +114,9 @@ drawView v@TimeView {initTime = t} =
         I.<-> drawClock v
 
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
-processEvent view (E.EvKey key _mods) =
+processEvent view@TimeView { position = p } (E.EvKey key _mods) =
   case key of
+    E.KBS -> Left $ Just view { position = if p > 0 then p - 1 else 0 }
     E.KEnter -> Right $ LocalTime (Cal.ModifiedJulianDay 0) (getTimeOfDay view)
     E.KChar c -> Left $ processInput view c
     _ -> Left Nothing
