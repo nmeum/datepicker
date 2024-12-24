@@ -117,6 +117,8 @@ processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
 processEvent view (E.EvKey key _mods) =
   case key of
     E.KBS -> Left $ Just (moveCursor view (-1))
+    E.KLeft -> Left $ Just (moveCursor view (-1))
+    E.KRight -> Left $ Just (moveCursor view 1)
     E.KEnter -> Right $ LocalTime (Cal.ModifiedJulianDay 0) (getTimeOfDay view)
     E.KChar c -> Left $ processInput view c
     _ -> Left Nothing
