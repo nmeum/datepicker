@@ -27,7 +27,7 @@ mkMonthView :: LocalTime -> MonthView
 mkMonthView time =
   let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
       mo = YearMonth year my
-   in MonthView (map (\n -> addMonths n mo) [0 .. 2]) day
+   in MonthView (map (`addMonths` mo) [0 .. 2]) day
   where
     day = localDay time
     (year, yd) = toOrdinalDate day
