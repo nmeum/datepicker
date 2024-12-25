@@ -31,8 +31,9 @@ monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
     monthWeeks' d
       | Cal.dayPeriod d /= m = []
       | otherwise =
-          filter ((==) m . Cal.dayPeriod) (weekOfDay d)
-            : monthWeeks' (addWeeks 1 d)
+          let days = weekOfDay d
+              nday = Cal.addDays 1 $ last days
+           in filter ((==) m . Cal.dayPeriod) days : monthWeeks' nday
 
 addWeeks :: Integer -> Cal.Day -> Cal.Day
 addWeeks n = Cal.addDays (n * 7)
