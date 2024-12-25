@@ -21,10 +21,13 @@ isTermEvent (E.EvKey key _) =
   key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
-showView :: (UI.View a) => a -> V.Vty -> V.DisplayRegion -> IO (Maybe LocalTime)
-showView v t r = showView' v t r True
+showView :: (UI.View a) => a -> V.Vty -> IO (Maybe LocalTime)
+showView v t = showView' v t True
   where
-    showView' view vty region redraw = do
+    showView' view vty redraw = do
+      let out = V.outputIface vty
+      region <- V.displayBounds out
+
       when redraw $ do
         let (w, h) = (V.regionWidth region, V.regionHeight region)
             img = horizCenter w $ vertCenter h $ UI.draw view
@@ -36,7 +39,7 @@ showView v t r = showView' v t r True
         then pure Nothing
         else case UI.process view e of
           Right output -> pure $ Just output
-          Left mv -> showView' (fromMaybe view mv) vty region (isJust mv)
+          Left mv -> showView' (fromMaybe view mv) vty (isJust mv)
 
 -- Make sure we read and write to /dev/tty instead of relying on stdin/stdout.
 -- This allows using datepicker within pipes where stdin/stdout is redirected.
@@ -64,15 +67,12 @@ main = do
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  let out = V.outputIface vty
-  region <- V.displayBounds out
-
-  maybeDate <- showView (M.mkMonthView localTime) vty region
+  maybeDate <- showView (M.mkMonthView localTime) vty
   case maybeDate of
     Nothing -> V.shutdown vty >> exitFailure
     (Just l@(LocalTime date _)) -> do
       (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
-      maybeTime <- showView (T.mkTimeView nowTime l) vty region
+      maybeTime <- showView (T.mkTimeView nowTime l) vty
       V.shutdown vty
 
       putStrLn $ case maybeTime of
