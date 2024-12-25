@@ -4,7 +4,7 @@ module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.Time.Calendar qualified as Cal
-import Data.Time.Calendar.Month (Month, pattern YearMonth)
+import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
 import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), localDay)
@@ -15,7 +15,7 @@ import UI (View (..))
 import Util (addWeeks, makePad)
 
 data MonthView = MonthView
-  { curMonth :: Month,
+  { months :: [Month],
     curDay :: Cal.Day
   }
 
@@ -26,14 +26,19 @@ instance View MonthView where
 mkMonthView :: LocalTime -> MonthView
 mkMonthView time =
   let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
-   in MonthView (YearMonth year my) day
+      mo = YearMonth year my
+   in MonthView (map (\n -> addMonths n mo) [0 .. 2]) day
   where
     day = localDay time
     (year, yd) = toOrdinalDate day
 
 drawView :: MonthView -> I.Image
-drawView MonthView {curDay = d, curMonth = m} =
-  drawMonth m d I.<|> makePad 1 monthHeight I.<-> makePad weekWidth 1
+drawView MonthView {curDay = d, months = ms} =
+  I.horizCat $ map drawView' ms
+  where
+    drawView' :: Month -> I.Image
+    drawView' m =
+      drawMonth m d I.<|> makePad 2 monthHeight I.<-> makePad weekWidth 1
 
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
@@ -52,7 +57,8 @@ processEvent _ _ = error "not implemented"
 ------------------------------------------------------------------------
 
 hasDay :: MonthView -> Cal.Day -> Bool
-hasDay MonthView {curMonth = m} d = Cal.dayPeriod d == m
+hasDay MonthView {months = ms} d =
+  any (\m -> Cal.dayPeriod d == m) ms
 
 moveDay :: MonthView -> (Cal.Day -> Cal.Day) -> Maybe MonthView
 moveDay mv@MonthView {curDay = d} proc =
