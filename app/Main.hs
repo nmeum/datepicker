@@ -71,7 +71,8 @@ main = do
   case maybeDate of
     Nothing -> V.shutdown vty >> exitFailure
     (Just l@(LocalTime date _)) -> do
-      maybeTime <- showView (T.mkTimeView l) vty region
+      (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
+      maybeTime <- showView (T.mkTimeView nowTime l) vty region
       V.shutdown vty
 
       putStrLn $ case maybeTime of

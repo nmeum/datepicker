@@ -3,7 +3,7 @@ module UI.Time (digitWidth, digitHeight, TimeView, mkTimeView) where
 import Data.Char (digitToInt, isDigit)
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar qualified as Cal
-import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay, makeTimeOfDayValid)
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (todHour, todMin), makeTimeOfDayValid)
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
@@ -104,8 +104,14 @@ clockFont =
     ]
   ]
 
-mkTimeView :: LocalTime -> TimeView
-mkTimeView = TimeView (NE.fromList [2, 3, 5, 9]) 0
+mkTimeView :: TimeOfDay -> LocalTime -> TimeView
+mkTimeView cur = TimeView (NE.fromList $ toInput cur) 0
+  where
+    toInput :: TimeOfDay -> [Int]
+    toInput t = fromInt (todHour t) ++ fromInt (todMin t)
+
+    fromInt :: Int -> [Int]
+    fromInt = map digitToInt . show
 
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
