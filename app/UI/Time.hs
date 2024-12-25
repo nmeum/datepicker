@@ -1,6 +1,7 @@
 module UI.Time (digitWidth, digitHeight, TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
+import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar qualified as Cal
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay, makeTimeOfDayValid)
 import Graphics.Vty.Attributes qualified as Attr
@@ -10,7 +11,7 @@ import UI (View (..))
 import Util (format, horizCenter, makePad)
 
 data TimeView = TimeView
-  { rawInput :: [Int], -- TODO: Use NonEmpty
+  { rawInput :: NE.NonEmpty Int,
     position :: Word,
     initTime :: LocalTime
   }
@@ -104,7 +105,7 @@ clockFont =
   ]
 
 mkTimeView :: LocalTime -> TimeView
-mkTimeView = TimeView [2, 3, 5, 9] 0
+mkTimeView = TimeView (NE.fromList [2, 3, 5, 9]) 0
 
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
@@ -131,7 +132,7 @@ processEvent _ _ = error "not implemented"
 
 moveCursor :: TimeView -> Int -> TimeView
 moveCursor view@TimeView {rawInput = input, position = p} off =
-  let len = fromIntegral $ length input
+  let len = fromIntegral $ NE.length input
    in view {position = (p + fromIntegral off) `mod` len}
 
 drawGlyph :: ClockGlyph -> Attr.Attr -> I.Image
@@ -141,7 +142,7 @@ drawGlyph glyph attr =
 
 drawClock :: TimeView -> I.Image
 drawClock TimeView {position = curPos, rawInput = input} =
-  let (h, m) = splitAt 2 $ zipWith drawDigit [0 ..] input
+  let (h, m) = NE.splitAt 2 $ NE.zipWith drawDigit (NE.fromList [0 ..]) input
    in I.horizCat h I.<|> colonSep I.<|> I.horizCat m
   where
     defAttr :: Attr.Attr
@@ -163,7 +164,7 @@ drawBlock blk attr = I.horizCat $ map (\i -> I.char (a i) ' ') blk
 
 getTimeOfDay :: TimeView -> Maybe TimeOfDay
 getTimeOfDay TimeView {rawInput = input} =
-  let (h, m) = splitAt 2 input
+  let (h, m) = NE.splitAt 2 input
    in makeTimeOfDayValid (toInt h) (toInt m) 0
   where
     toInt :: [Int] -> Int
@@ -179,5 +180,5 @@ cycleDigits v@TimeView {position = p, rawInput = input} n =
   let newView = moveCursor v 1
    in newView {rawInput = newInput}
   where
-    newInput :: [Int]
-    newInput = zipWith (\e i -> if i == p then n else e) input [0 ..]
+    newInput :: NE.NonEmpty Int
+    newInput = NE.zipWith (\e i -> if i == p then n else e) input (NE.fromList [0 ..])
