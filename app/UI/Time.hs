@@ -111,7 +111,9 @@ mkTimeView cur = TimeView (NE.fromList $ toInput cur) 0
     toInput t = fromInt (todHour t) ++ fromInt (todMin t)
 
     fromInt :: Int -> [Int]
-    fromInt = map digitToInt . show
+    fromInt n =
+      let t = map digitToInt $ show n
+       in if length t < 2 then 0 : t else t
 
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
