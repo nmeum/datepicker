@@ -7,21 +7,52 @@ import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
 import Graphics.Vty.Platform.Unix.Settings (UnixSettings (settingInputFd, settingOutputFd), defaultSettings)
-import System.Environment (getArgs, getProgName)
+import Options.Applicative qualified as OPT
 import System.Exit (exitFailure)
-import System.IO (hPutStrLn, stderr)
 import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
 import UI qualified
 import UI.Month qualified as M
 import UI.Time qualified as T
 import Util (format, horizCenter, vertCenter)
 
+data Opts = Opts
+  { optNoTime :: Bool,
+    optFormat :: String
+  }
+
+optsParser :: OPT.Parser Opts
+optsParser =
+  Opts
+    <$> OPT.switch
+      ( OPT.long "date-only"
+          <> OPT.short 'd'
+          <> OPT.help "Only require date selection, omitting time"
+      )
+    <*> OPT.option
+      OPT.auto
+      ( OPT.long "format"
+          <> OPT.short 'f'
+          <> OPT.value "%c"
+          <> OPT.help "Format in which the date should be output"
+      )
+
+cmdOpts :: OPT.ParserInfo Opts
+cmdOpts =
+  OPT.info
+    (optsParser OPT.<**> OPT.helper)
+    ( OPT.fullDesc
+        <> OPT.progDesc "Print a greeting for TARGET"
+        <> OPT.header "hello - a test for optparse-applicative"
+    )
+
+------------------------------------------------------------------------
+
 isTermEvent :: E.Event -> Bool
 isTermEvent (E.EvKey key _) =
   key == E.KEsc || key == E.KChar 'q'
 isTermEvent _ = False
 
-showView :: (UI.View a) => a -> V.Vty -> IO (Maybe LocalTime)
+showView :: (UI.View a) => a -> V.Vty -> IO LocalTime
 showView v t = showView' v t True
   where
     showView' view vty redraw = do
@@ -36,9 +67,9 @@ showView v t = showView' v t True
 
       e <- V.nextEvent vty
       if isTermEvent e
-        then pure Nothing
+        then V.shutdown vty >> exitFailure
         else case UI.process view e of
-          Right output -> pure $ Just output
+          Right output -> pure output
           Left mv -> showView' (fromMaybe view mv) vty (isJust mv)
 
 -- Make sure we read and write to /dev/tty instead of relying on stdin/stdout.
@@ -52,30 +83,17 @@ unixSettings = do
 
 main :: IO ()
 main = do
-  args <- getArgs
-  when (length args > 1) $ do
-    progName <- getProgName
-    hPutStrLn stderr $ "Usage: " ++ progName ++ " [FORMAT]"
-    hPutStrLn stderr ""
-    hPutStrLn stderr "Format documentation: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime"
-    exitFailure
-
-  let outFmt = case args of
-        [] -> "%c"
-        x : _ -> x
+  args <- OPT.execParser cmdOpts
+  let outFmt = optFormat args
 
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  maybeDate <- showView (M.mkMonthView localTime) vty
-  case maybeDate of
-    Nothing -> V.shutdown vty >> exitFailure
-    (Just l@(LocalTime date _)) -> do
+  lt@(LocalTime date _) <- showView (M.mkMonthView localTime) vty
+  if optNoTime args
+    then V.shutdown vty >> putStrLn (format outFmt lt)
+    else do
       (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
-      maybeTime <- showView (T.mkTimeView nowTime l) vty
-      V.shutdown vty
+      (LocalTime _ time) <- showView (T.mkTimeView nowTime lt) vty
 
-      putStrLn $ case maybeTime of
-        (Just (LocalTime _ time)) ->
-          format outFmt (LocalTime date time)
-        _ -> format outFmt l
+      V.shutdown vty >> putStrLn (format outFmt $ LocalTime date time)
