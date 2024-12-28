@@ -1,13 +1,9 @@
-{-# LANGUAGE PatternSynonyms #-}
-
 module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.Time.Calendar qualified as Cal
-import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
-import Data.Time.Calendar.MonthDay (dayOfYearToMonthAndDay)
-import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
-import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), localDay)
+import Data.Time.Calendar.Month (Month)
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
 import Draw (drawMonth, monthHeight, weekWidth)
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
@@ -23,14 +19,8 @@ instance View MonthView where
   draw = drawView
   process = processEvent
 
-mkMonthView :: LocalTime -> MonthView
-mkMonthView time =
-  let my = fst $ dayOfYearToMonthAndDay (Cal.isLeapYear year) yd
-      mo = YearMonth year my
-   in MonthView (map (`addMonths` mo) [0 .. 2]) day
-  where
-    day = localDay time
-    (year, yd) = toOrdinalDate day
+mkMonthView :: [Month] -> Cal.Day -> MonthView
+mkMonthView = MonthView
 
 drawView :: MonthView -> I.Image
 drawView MonthView {curDay = d, months = ms} =

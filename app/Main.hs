@@ -2,7 +2,9 @@ module Main where
 
 import Control.Monad (when)
 import Data.Maybe (fromMaybe, isJust)
-import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, zonedTimeToLocalTime)
+import Data.Time.Calendar qualified as Cal
+import Data.Time.Calendar.Month (Month, addMonths)
+import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, localDay, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
@@ -17,7 +19,8 @@ import Util (format, horizCenter, vertCenter)
 
 data Opts = Opts
   { optNoTime :: Bool,
-    optFormat :: String
+    optFormat :: String,
+    optNextPrev :: Bool
   }
 
 optsParser :: OPT.Parser Opts
@@ -35,6 +38,20 @@ optsParser =
           <> OPT.value "%c"
           <> OPT.help "Format in which the date should be output"
       )
+    <*> OPT.switch
+      ( OPT.long "three"
+          <> OPT.short '3'
+          <> OPT.help "Display next/previous month for current month"
+      )
+
+optsPeriod :: Opts -> Cal.Day -> [Month]
+optsPeriod opts day =
+  if optNextPrev opts
+    then [addMonths (-1) month, month, addMonths 1 month]
+    else [month]
+  where
+    month :: Month
+    month = Cal.dayPeriod day
 
 cmdOpts :: OPT.ParserInfo Opts
 cmdOpts =
@@ -89,7 +106,10 @@ main = do
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  lt@(LocalTime date _) <- showView (M.mkMonthView localTime) vty
+  let today = localDay localTime
+      range = optsPeriod args today
+  lt@(LocalTime date _) <- showView (M.mkMonthView range today) vty
+
   if optNoTime args
     then V.shutdown vty >> putStrLn (format outFmt lt)
     else do
