@@ -8,7 +8,7 @@ import Draw (drawMonth, monthHeight, weekWidth)
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
 import UI (View (..))
-import Util (addWeeks, makePad)
+import Util (addWeeks, makePad, splitEvery)
 
 data MonthView = MonthView
   { months :: [Month],
@@ -24,7 +24,7 @@ mkMonthView = MonthView
 
 drawView :: MonthView -> I.Image
 drawView MonthView {curDay = d, months = ms} =
-  I.horizCat $ map drawView' ms
+  I.vertCat (map I.horizCat $ splitEvery 3 (map drawView' ms))
   where
     drawView' :: Month -> I.Image
     drawView' m =

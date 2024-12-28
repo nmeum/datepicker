@@ -4,6 +4,7 @@ import Control.Monad (when)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
+import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
 import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, localDay, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
@@ -15,12 +16,13 @@ import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
 import UI qualified
 import UI.Month qualified as M
 import UI.Time qualified as T
-import Util (format, horizCenter, vertCenter)
+import Util (format, horizCenter, periodAllMonths, vertCenter)
 
 data Opts = Opts
   { optNoTime :: Bool,
     optFormat :: String,
-    optNextPrev :: Bool
+    optNextPrev :: Bool,
+    optYear :: Bool
   }
 
 optsParser :: OPT.Parser Opts
@@ -43,12 +45,17 @@ optsParser =
           <> OPT.short '3'
           <> OPT.help "Display next/previous month for current month"
       )
+    <*> OPT.switch
+      ( OPT.long "year"
+          <> OPT.short 'y'
+          <> OPT.help "Display the entire year"
+      )
 
 optsPeriod :: Opts -> Cal.Day -> [Month]
-optsPeriod opts day =
-  if optNextPrev opts
-    then [addMonths (-1) month, month, addMonths 1 month]
-    else [month]
+optsPeriod opts day
+  | (optNextPrev opts) = [addMonths (-1) month, month, addMonths 1 month]
+  | (optYear opts) = periodAllMonths (fst $ toOrdinalDate day)
+  | otherwise = [month]
   where
     month :: Month
     month = Cal.dayPeriod day

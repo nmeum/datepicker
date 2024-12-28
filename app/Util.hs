@@ -9,15 +9,25 @@ module Util
     addSep,
     locale,
     makePad,
+    periodAllMonths,
+    splitEvery,
   )
 where
 
 import Data.List (intersperse)
 import Data.Time.Calendar qualified as Cal
-import Data.Time.Calendar.Month (Month)
+import Data.Time.Calendar.Month (Month, addMonths, diffMonths)
 import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
+
+splitEvery :: Int -> [a] -> [[a]]
+splitEvery _ [] = []
+splitEvery n list = first : splitEvery n rest
+  where
+    (first, rest) = splitAt n list
+
+------------------------------------------------------------------------
 
 type Weeks = [[Cal.Day]]
 
@@ -34,6 +44,12 @@ monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
           let days = weekOfDay d
               nday = Cal.addDays 1 $ last days
            in filter ((==) m . Cal.dayPeriod) days : monthWeeks' nday
+
+periodAllMonths :: (Cal.DayPeriod p) => p -> [Month]
+periodAllMonths p =
+  let (fd, ld) = (Cal.periodFirstDay p, Cal.periodLastDay p)
+      (fm, lm) = (Cal.dayPeriod fd :: Month, Cal.dayPeriod ld :: Month)
+   in map (`addMonths` fm) [0 .. lm `diffMonths` fm]
 
 addWeeks :: Integer -> Cal.Day -> Cal.Day
 addWeeks n = Cal.addDays (n * 7)
