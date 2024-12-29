@@ -27,7 +27,7 @@ showView v isTermEvent t = showView' v t True
             img = horizCenter w $ vertCenter h $ draw view
             pic = V.picForImage img
         if width v > w || height v > h
-          then V.shutdown vty >> putStrLn ("Terminal is too small: " ++ show w ++ " " ++ show w) >> exitFailure
+          then V.shutdown vty >> putStrLn "Terminal is too small" >> exitFailure
           else V.update vty pic
 
       e <- V.nextEvent vty

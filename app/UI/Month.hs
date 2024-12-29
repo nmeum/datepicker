@@ -19,7 +19,7 @@ instance View MonthView where
   draw = drawView
   process = processEvent
   width (MonthView {months = m}) = (weekWidth + 2) * (min 3 $ length m)
-  height (MonthView {months = m}) = 7 * (length $ splitEvery 3 m)
+  height (MonthView {months = m}) = 8 * (length $ splitEvery 3 m)
 
 mkMonthView :: [Month] -> Cal.Day -> MonthView
 mkMonthView = MonthView
