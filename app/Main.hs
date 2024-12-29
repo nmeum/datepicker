@@ -18,12 +18,35 @@ import UI.Month qualified as M
 import UI.Time qualified as T
 import Util (format, horizCenter, periodAllMonths, vertCenter)
 
+data Duration = OneMonth | ThreeMonths | TwelveMonths
+
 data Opts = Opts
   { optNoTime :: Bool,
     optFormat :: String,
-    optNextPrev :: Bool,
-    optYear :: Bool
+    optDuration :: Duration
   }
+
+durationParser :: OPT.Parser Duration
+durationParser =
+  OPT.flag
+    OneMonth
+    OneMonth
+    ( OPT.long "one"
+        <> OPT.short '1'
+        <> OPT.help "Display a single month"
+    )
+    OPT.<|> OPT.flag'
+      ThreeMonths
+      ( OPT.long "three"
+          <> OPT.short '3'
+          <> OPT.help "Display next/previous month for current month"
+      )
+    OPT.<|> OPT.flag'
+      TwelveMonths
+      ( OPT.long "year"
+          <> OPT.short 'y'
+          <> OPT.help "Display the entire year"
+      )
 
 optsParser :: OPT.Parser Opts
 optsParser =
@@ -40,25 +63,14 @@ optsParser =
           <> OPT.value "%c"
           <> OPT.help "Format in which the date should be output"
       )
-    <*> OPT.switch
-      ( OPT.long "three"
-          <> OPT.short '3'
-          <> OPT.help "Display next/previous month for current month"
-      )
-    <*> OPT.switch
-      ( OPT.long "year"
-          <> OPT.short 'y'
-          <> OPT.help "Display the entire year"
-      )
+    <*> durationParser
 
-optsPeriod :: Opts -> Cal.Day -> [Month]
-optsPeriod opts day
-  | (optNextPrev opts) = [addMonths (-1) month, month, addMonths 1 month]
-  | (optYear opts) = periodAllMonths (fst $ toOrdinalDate day)
-  | otherwise = [month]
-  where
-    month :: Month
-    month = Cal.dayPeriod day
+optsPeriod :: Duration -> Cal.Day -> [Month]
+optsPeriod OneMonth day = [Cal.dayPeriod day]
+optsPeriod ThreeMonths day =
+  let month = Cal.dayPeriod day
+   in [addMonths (-1) month, month, addMonths 1 month]
+optsPeriod TwelveMonths day = periodAllMonths (fst $ toOrdinalDate day)
 
 cmdOpts :: OPT.ParserInfo Opts
 cmdOpts =
@@ -114,7 +126,7 @@ main = do
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
   let today = localDay localTime
-      range = optsPeriod args today
+      range = optsPeriod (optDuration args) today
   lt@(LocalTime date _) <- showView (M.mkMonthView range today) vty
 
   if optNoTime args
