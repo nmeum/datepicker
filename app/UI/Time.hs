@@ -19,6 +19,8 @@ data TimeView = TimeView
 instance View TimeView where
   draw = drawView
   process = processEvent
+  width _ = digitWidth * 5 + 4
+  height _ = digitHeight
 
 type ClockGlyph = [[Int]]
 
@@ -27,9 +29,6 @@ digitWidth = 5
 
 digitHeight :: Int
 digitHeight = 5
-
-clockWidth :: Int
-clockWidth = digitWidth * 5 + 4
 
 -- Shamelessly stolen from the tmux clock-mode.
 --
@@ -118,8 +117,8 @@ mkTimeView cur = TimeView (NE.fromList $ toInput cur) 0
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
   let str = format "%-d %B, %Y" t
-   in horizCenter clockWidth (I.string Attr.defAttr str)
-        I.<-> makePad clockWidth 1
+   in horizCenter (width v) (I.string Attr.defAttr str)
+        I.<-> makePad (width v) 1
         I.<-> drawClock v
 
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime

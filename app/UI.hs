@@ -12,6 +12,8 @@ import Util (horizCenter, vertCenter)
 class View a where
   draw :: a -> I.Image
   process :: a -> E.Event -> Either (Maybe a) LocalTime
+  width :: a -> Int
+  height :: a -> Int
 
 showView :: (View a) => a -> (E.Event -> Bool) -> V.Vty -> IO LocalTime
 showView v isTermEvent t = showView' v t True
@@ -24,7 +26,9 @@ showView v isTermEvent t = showView' v t True
         let (w, h) = (V.regionWidth region, V.regionHeight region)
             img = horizCenter w $ vertCenter h $ draw view
             pic = V.picForImage img
-        V.update vty pic
+        if width v > w || height v > h
+          then V.shutdown vty >> putStrLn ("Terminal is too small: " ++ show w ++ " " ++ show w) >> exitFailure
+          else V.update vty pic
 
       e <- V.nextEvent vty
       if isTermEvent e
