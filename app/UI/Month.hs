@@ -102,12 +102,9 @@ drawMonth m curDay = drawMonthYear m I.<-> drawHeader locale I.<-> weeks
 drawHeader :: Fmt.TimeLocale -> I.Image
 drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
   let wdays = map snd w
-      items = map (drawWeekDay . shortenWeekDay) wdays
+      items = map (I.string Attr.defAttr . shortenWeekDay) wdays
    in I.horizCat $ addSep items
   where
-    drawWeekDay :: String -> I.Image
-    drawWeekDay = I.string Attr.defAttr
-
     shortenWeekDay :: String -> String
     shortenWeekDay (f : s : _xs) = [f, s]
     shortenWeekDay s = s
