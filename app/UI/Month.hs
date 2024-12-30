@@ -19,8 +19,6 @@ data MonthView = MonthView
 instance View MonthView where
   draw = drawView
   process = processEvent
-  width (MonthView {months = m}) = (weekWidth + 2) * min 3 (length m)
-  height (MonthView {months = m}) = 8 * length (splitEvery 3 m)
 
 weekWidth :: Int
 weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
