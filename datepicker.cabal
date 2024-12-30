@@ -23,7 +23,6 @@ executable datepicker
     other-modules:    UI.Month
                     , UI.Time
                     , UI
-                    , Draw
                     , Util
                     , CmdLine
     build-depends:    base ^>=4.19.1.0
