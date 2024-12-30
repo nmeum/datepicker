@@ -134,7 +134,7 @@ processEvent view (E.EvKey key _mods) =
       Just t -> Right $ LocalTime (Cal.ModifiedJulianDay 0) t
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
-processEvent _ _ = error "not implemented"
+processEvent _ _ = Left Nothing
 
 ------------------------------------------------------------------------
 

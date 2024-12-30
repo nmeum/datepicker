@@ -49,7 +49,7 @@ processEvent view@MonthView {curDay = day} (E.EvKey key _mods) =
     E.KLeft -> Left $ moveDay view (Cal.addDays (-1))
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
-processEvent _ _ = error "not implemented"
+processEvent _ _ = Left Nothing
 
 ------------------------------------------------------------------------
 
