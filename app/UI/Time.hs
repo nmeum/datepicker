@@ -28,9 +28,6 @@ digitWidth = 5
 digitHeight :: Int
 digitHeight = 5
 
-clockWidth :: Int
-clockWidth = digitWidth * 5 + 4
-
 -- Shamelessly stolen from the tmux clock-mode.
 --
 -- See: https://github.com/tmux/tmux/blob/3.5a/window-clock.c#L53-L124
@@ -118,8 +115,9 @@ mkTimeView cur = TimeView (NE.fromList $ toInput cur) 0
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
   let str = format "%-d %B, %Y" t
-   in horizCenter clockWidth (I.string Attr.defAttr str)
-        I.<-> makePad clockWidth 1
+      clk = drawClock v
+   in horizCenter (I.imageWidth clk) (I.string Attr.defAttr str)
+        I.<-> makePad (I.imageWidth clk) 1
         I.<-> drawClock v
 
 processEvent :: TimeView -> E.Event -> Either (Maybe TimeView) LocalTime
