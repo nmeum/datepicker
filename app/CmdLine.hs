@@ -72,6 +72,6 @@ cmdOpts =
   OPT.info
     (optsParser OPT.<**> OPT.helper)
     ( OPT.fullDesc
-        <> OPT.progDesc "Print a greeting for TARGET"
-        <> OPT.header "hello - a test for optparse-applicative"
+        <> OPT.progDesc "Interactively select a date to be printed to stdout"
+        <> OPT.header "datepicker - a utility for interactive date selection"
     )
