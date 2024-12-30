@@ -64,7 +64,7 @@ format :: (Fmt.FormatTime t) => String -> t -> String
 format = Fmt.formatTime locale
 
 addSep :: [I.Image] -> [I.Image]
-addSep = intersperse (I.string Attr.defAttr " ")
+addSep = intersperse (I.char Attr.defAttr ' ')
 
 makePad :: Int -> Int -> I.Image
 makePad = I.charFill Attr.defAttr ' '
