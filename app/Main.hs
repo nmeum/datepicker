@@ -1,11 +1,12 @@
 module Main where
 
 import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optsPeriod)
+import Control.Exception (throwIO)
 import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, localDay, zonedTimeToLocalTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
-import Graphics.Vty.Platform.Unix.Settings (UnixSettings (settingInputFd, settingOutputFd), defaultSettings)
+import Graphics.Vty.Platform.Unix.Settings qualified as VU
 import Options.Applicative (execParser)
 import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
 import UI qualified
@@ -20,12 +21,24 @@ isTerm _ = False
 
 -- Make sure we read and write to /dev/tty instead of relying on stdin/stdout.
 -- This allows using datepicker within pipes where stdin/stdout is redirected.
-unixSettings :: IO UnixSettings
+unixSettings :: IO VU.UnixSettings
 unixSettings = do
-  fd <- openFd "/dev/tty" ReadWrite defaultFileFlags
+  ttyFd <- openFd "/dev/tty" ReadWrite defaultFileFlags
 
-  s <- defaultSettings
-  pure s {settingInputFd = fd, settingOutputFd = fd}
+  -- Can't build upon defaultSettings here as it flushes standard input and
+  -- if standard input is a pipe it may not necessarily be flushable.
+  mb <- VU.currentTerminalName
+  case mb of
+    Nothing -> throwIO VU.MissingTermEnvVar
+    Just t -> do
+      return $
+        VU.UnixSettings
+          { VU.settingVmin = 1,
+            VU.settingVtime = 100,
+            VU.settingInputFd = ttyFd,
+            VU.settingOutputFd = ttyFd,
+            VU.settingTermName = t
+          }
 
 main :: IO ()
 main = do
