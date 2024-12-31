@@ -2,6 +2,7 @@ module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.List (find)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
@@ -137,20 +138,21 @@ lastDayOfWeek mv@MonthView {curDay = d} =
 
 moveCursor :: MonthView -> Direction -> Maybe MonthView
 moveCursor mv@MonthView {curDay = day} dir
-  | lastDayOfWeek mv && dir == NextDay = moveMonthwise mv 1 head
-  | firstDayOfWeek mv && dir == PrevDay = moveMonthwise mv (-1) last
+  | lastDayOfWeek mv && dir == NextDay = moveMonthwise mv 1 NE.head
+  | firstDayOfWeek mv && dir == PrevDay = moveMonthwise mv (-1) NE.last
   -- \| firstWeekOfMonth mv && dir == _
   -- \| lastWeekOfMonth mv && dir == _
   | otherwise =
       let newDay = moveByDirection dir day
        in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
 
-moveMonthwise :: MonthView -> Integer -> ([Cal.Day] -> Cal.Day) -> Maybe MonthView
+-- TODO: We could make Weeks (Util.hs) a NonEmpty type.
+moveMonthwise :: MonthView -> Integer -> (NE.NonEmpty Cal.Day -> Cal.Day) -> Maybe MonthView
 moveMonthwise mv@MonthView {curDay = day} inc select =
   let curMonth = currentMonth mv
       newMonth = addMonths inc curMonth
    in if hasMonth mv newMonth
         then
-          (\lst -> mv {curDay = select lst})
+          (\lst -> mv {curDay = select $ NE.fromList lst})
             <$> nthWeekOfMonth newMonth (weekOfMonth day)
         else Nothing
