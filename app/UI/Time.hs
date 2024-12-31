@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module UI.Time (TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
@@ -142,7 +144,7 @@ drawGlyph glyph attr =
 
 drawClock :: TimeView -> I.Image
 drawClock TimeView {position = curPos, rawInput = input} =
-  let (h, m) = NE.splitAt 2 $ NE.zipWith drawDigit (NE.fromList [0 ..]) input
+  let (h, m) = NE.splitAt 2 $ NE.zipWith drawDigit [0 ..] input
    in I.horizCat h I.<|> colonSep I.<|> I.horizCat m
   where
     defAttr :: Attr.Attr
@@ -181,4 +183,4 @@ cycleDigits v@TimeView {position = p, rawInput = input} n =
    in newView {rawInput = newInput}
   where
     newInput :: NE.NonEmpty Int
-    newInput = NE.zipWith (\e i -> if i == p then n else e) input (NE.fromList [0 ..])
+    newInput = NE.zipWith (\e i -> if i == p then n else e) input [0 ..]
