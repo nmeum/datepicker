@@ -1,8 +1,10 @@
 module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
+import Data.List (find)
+import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
-import Data.Time.Calendar.Month (Month)
+import Data.Time.Calendar.Month (Month, addMonths)
 import Data.Time.Format qualified as Fmt
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
 import Graphics.Vty.Attributes qualified as Attr
@@ -20,8 +22,19 @@ instance View MonthView where
   draw = drawView
   process = processEvent
 
-weekWidth :: Int
-weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
+currentMonth :: MonthView -> Month
+currentMonth MonthView {months = ms, curDay = d} =
+  fromJust $ find (\m -> Cal.dayPeriod d == m) ms
+
+hasDay :: MonthView -> Cal.Day -> Bool
+hasDay MonthView {months = ms} d =
+  any (\m -> Cal.dayPeriod d == m) ms
+
+hasMonth :: MonthView -> Month -> Bool
+hasMonth MonthView {months = ms} m =
+  any ((==) m) ms
+
+------------------------------------------------------------------------
 
 mkMonthView :: [Month] -> Cal.Day -> MonthView
 mkMonthView = MonthView
@@ -41,24 +54,18 @@ processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) LocalTime
 processEvent view@MonthView {curDay = day} (E.EvKey key _mods) =
   case key of
     E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
-    E.KUp -> Left $ moveDay view (addWeeks (-1))
-    E.KDown -> Left $ moveDay view (addWeeks 1)
-    E.KRight -> Left $ moveDay view (Cal.addDays 1)
-    E.KLeft -> Left $ moveDay view (Cal.addDays (-1))
+    E.KUp -> Left $ moveCursor view PrevWeek
+    E.KDown -> Left $ moveCursor view NextWeek
+    E.KRight -> Left $ moveCursor view NextDay
+    E.KLeft -> Left $ moveCursor view PrevDay
     _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = Left Nothing
 
 ------------------------------------------------------------------------
 
-hasDay :: MonthView -> Cal.Day -> Bool
-hasDay MonthView {months = ms} d =
-  any (\m -> Cal.dayPeriod d == m) ms
-
-moveDay :: MonthView -> (Cal.Day -> Cal.Day) -> Maybe MonthView
-moveDay mv@MonthView {curDay = d} proc =
-  let newDay = proc d
-   in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
+weekWidth :: Int
+weekWidth = (2 * 7) + 6 -- +6 for spacing between weeks
 
 drawDay :: Cal.Day -> Bool -> I.Image
 drawDay day curDay =
@@ -104,3 +111,46 @@ drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
     shortenWeekDay :: String -> String
     shortenWeekDay (f : s : _xs) = [f, s]
     shortenWeekDay s = s
+
+------------------------------------------------------------------------
+
+data Direction = NextDay | PrevDay | NextWeek | PrevWeek
+  deriving (Eq)
+
+moveByDirection :: Direction -> Cal.Day -> Cal.Day
+moveByDirection NextDay = Cal.addDays 1
+moveByDirection PrevDay = Cal.addDays (-1)
+moveByDirection NextWeek = addWeeks 1
+moveByDirection PrevWeek = addWeeks (-1)
+
+-- TODO: Make this customizable to implement the cal(1) -m option.
+firstDayOfWeek :: MonthView -> Bool
+firstDayOfWeek mv@MonthView {curDay = d} =
+  Cal.dayOfWeek d == Cal.Sunday
+    || Cal.periodFirstDay (currentMonth mv) == d
+
+-- TODO: Make this customizable to implement the cal(1) -m option.
+lastDayOfWeek :: MonthView -> Bool
+lastDayOfWeek mv@MonthView {curDay = d} =
+  Cal.dayOfWeek d == Cal.Saturday
+    || Cal.periodLastDay (currentMonth mv) == d
+
+moveCursor :: MonthView -> Direction -> Maybe MonthView
+moveCursor mv@MonthView {curDay = day} dir
+  | lastDayOfWeek mv && dir == NextDay = moveMonthwise mv 1 head
+  | firstDayOfWeek mv && dir == PrevDay = moveMonthwise mv (-1) last
+  -- \| firstWeekOfMonth mv && dir == _
+  -- \| lastWeekOfMonth mv && dir == _
+  | otherwise =
+      let newDay = moveByDirection dir day
+       in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
+
+moveMonthwise :: MonthView -> Integer -> ([Cal.Day] -> Cal.Day) -> Maybe MonthView
+moveMonthwise mv@MonthView {curDay = day} inc select =
+  let curMonth = currentMonth mv
+      newMonth = addMonths inc curMonth
+   in if hasMonth mv newMonth
+        then
+          (\lst -> mv {curDay = select lst})
+            <$> nthWeekOfMonth newMonth (weekOfMonth day)
+        else Nothing

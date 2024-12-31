@@ -1,6 +1,8 @@
 module Util
   ( Weeks,
     monthWeeks,
+    weekOfMonth,
+    nthWeekOfMonth,
     addWeeks,
     horizPad,
     horizCenter,
@@ -14,7 +16,8 @@ module Util
   )
 where
 
-import Data.List (intersperse)
+import Data.List (findIndex, intersperse, (!?))
+import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths, diffMonths)
 import Data.Time.Format qualified as Fmt
@@ -44,6 +47,14 @@ monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
           let days = weekOfDay d
               nday = Cal.addDays 1 $ last days
            in filter ((==) m . Cal.dayPeriod) days : monthWeeks' nday
+
+weekOfMonth :: Cal.Day -> Int
+weekOfMonth d =
+  let weeks = monthWeeks (Cal.dayPeriod d)
+   in fromJust $ findIndex (any ((==) d)) weeks
+
+nthWeekOfMonth :: Month -> Int -> Maybe [Cal.Day]
+nthWeekOfMonth m n = monthWeeks m !? n
 
 periodAllMonths :: (Cal.DayPeriod p) => p -> [Month]
 periodAllMonths p =
