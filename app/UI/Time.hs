@@ -1,4 +1,4 @@
-module UI.Time (digitWidth, digitHeight, TimeView, mkTimeView) where
+module UI.Time (TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
 import Data.List.NonEmpty qualified as NE
@@ -21,12 +21,6 @@ instance View TimeView where
   process = processEvent
 
 type ClockGlyph = [[Int]]
-
-digitWidth :: Int
-digitWidth = 5
-
-digitHeight :: Int
-digitHeight = 5
 
 -- Shamelessly stolen from the tmux clock-mode.
 --
@@ -143,8 +137,8 @@ moveCursor view@TimeView {rawInput = input, position = p} off =
 
 drawGlyph :: ClockGlyph -> Attr.Attr -> I.Image
 drawGlyph glyph attr =
-  I.vertCat (map (`drawBlock` attr) glyph)
-    I.<|> makePad 1 digitHeight
+  let digits = map (`drawBlock` attr) glyph
+    in I.vertCat digits I.<|> makePad 1 (length digits)
 
 drawClock :: TimeView -> I.Image
 drawClock TimeView {position = curPos, rawInput = input} =
