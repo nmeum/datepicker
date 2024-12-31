@@ -31,8 +31,9 @@ drawView MonthView {curDay = d, months = ms} =
   I.vertCat (map I.horizCat $ splitEvery 3 (map drawView' ms))
   where
     drawView' :: Month -> I.Image
-    drawView' m = let img = drawMonth m d
-      in img I.<|> makePad 2 (I.imageHeight img) I.<-> makePad weekWidth 1
+    drawView' m =
+      let img = drawMonth m d
+       in img I.<|> makePad 2 (I.imageHeight img) I.<-> makePad weekWidth 1
 
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.

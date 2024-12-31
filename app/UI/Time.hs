@@ -140,7 +140,7 @@ moveCursor view@TimeView {rawInput = input, position = p} off =
 drawGlyph :: ClockGlyph -> Attr.Attr -> I.Image
 drawGlyph glyph attr =
   let digits = map (`drawBlock` attr) glyph
-    in I.vertCat digits I.<|> makePad 1 (length digits)
+   in I.vertCat digits I.<|> makePad 1 (length digits)
 
 drawClock :: TimeView -> I.Image
 drawClock TimeView {position = curPos, rawInput = input} =
