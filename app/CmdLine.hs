@@ -50,10 +50,11 @@ optsParser =
           <> OPT.help "Only require date selection, omitting time"
       )
     <*> OPT.option
-      OPT.auto
+      OPT.str
       ( OPT.long "format"
           <> OPT.short 'f'
           <> OPT.value "%c"
+          <> OPT.metavar "FORMAT"
           <> OPT.help "Format in which the date should be output"
       )
     <*> durationParser
