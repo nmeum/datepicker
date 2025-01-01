@@ -2,7 +2,7 @@
 
 An [fzf]-like tool to interactively select a date in a provided format.
 
-![Example usage with journalctl(1)](https://files.8pit.net/img/datepicker-demo.gif)
+![Example usage with at(1) job scheduling](https://files.8pit.net/img/datepicker-demo-20250101.gif)
 
 ### Motivation
 
