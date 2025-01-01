@@ -26,7 +26,7 @@ Alternatively, if you don't have a Haskell development environment, you can also
 Guix will automatically install supported GHC version for you and add the binary to your `$PATH`.
 In order to install `datepicker` this way run the following command
 
-	$ guix time-machine -C channels.scm -- package
+	$ guix time-machine -C channels.scm -- package -f manifest.scm
 
 ### Usage Example
 

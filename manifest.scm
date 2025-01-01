@@ -8,7 +8,7 @@
              (gnu packages haskell-check)
              (gnu packages haskell-xyz))
 
--- The version of the time library shipped by ghc-9.2 is too old.
+;; The version of the time library shipped by ghc-9.2 is too old.
 (define-public ghc-time
   (package
     (name "ghc-time")
