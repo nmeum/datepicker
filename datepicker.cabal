@@ -10,7 +10,7 @@ maintainer:         soeren+git@soeren-tempel.net
 -- copyright:
 category:           System
 build-type:         Simple
--- extra-doc-files:
+extra-doc-files:    README.md
 -- extra-source-files:
 
 common warnings
