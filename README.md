@@ -10,6 +10,12 @@ A variety of command-line utilities ([at], [journalctl], [mpick], [khal], …) a
 Entering these dates in the required formats manually can be cumbersome and annoying.
 Inspired by [fzf], this utility allows visually selecting a date interactively through a TUI, thereby easing specification of dates for other command-line utilities.
 
+### Status
+
+Basic functionally is operational and works.
+However, I am not entirely happy with the keyboard navigation in the date selection view yet (see below).
+Further, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have.
+
 ### Installation
 
 To install this utility clone the repository and run:
@@ -77,6 +83,7 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [fzf]: https://github.com/junegunn/fzf
+[cal]: https://manpages.debian.org/unstable/ncal/cal.1.en.html
 [at]: https://manpages.debian.org/unstable/at/at.1.en.html
 [journalctl]: https://manpages.debian.org/unstable/systemd/journalctl.1.en.html#FILTERING_OPTIONS
 [mpick]: https://manpages.debian.org/unstable/mblaze/mpick.1.en.html#EXAMPLES
