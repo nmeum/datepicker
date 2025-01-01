@@ -18,13 +18,15 @@ To install this utility clone the repository and run:
 
 ### Usage Example
 
-Presently, `datepicker` only supports a single command-line argument: The date format.
+By default, `datepicker` requires selection of both a date and a time and prints the selected date in the [RFC 1123] date format.
+The behavior can be customized using several command-line flags, e.g. the `-f` option allows specification of a different date format.
 This format must be specified using the format strings supported by the [formatTime] function from Haskell's `time` library.
 For example, in order to use this utility with [journalctl] you may invoke it as follows:
 
-	$ journalctl --since="$(datepicker '%Y-%m-%d %H:%M:%S')"
+	$ journalctl --since="$(datepicker -f '%Y-%m-%d %H:%M:%S')"
 
-The command-line interface is subject to change, more options will be added shortly.
+Refer to the `--help` output for an overview of all supported command-line options.
+The command-line interface is still subject to change, more options will likely be added in future versions.
 
 ### License
 
@@ -46,3 +48,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [mpick]: https://manpages.debian.org/unstable/mblaze/mpick.1.en.html#EXAMPLES
 [khal]: https://manpages.debian.org/unstable/khal/khal.1.en.html
 [formatTime]: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime
+[RFC 1123]: https://datatracker.ietf.org/doc/html/rfc1123
