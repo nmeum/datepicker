@@ -35,15 +35,15 @@ The behavior can be customized using several command-line flags, e.g. the `-f` o
 This format must be specified using the format strings supported by the [formatTime] function from Haskell's `time` library.
 A few example usages are provided below.
 
-**at** — Execute a job and a specified time:
+**at** — Execute a job at a specified time which is selected based on the current year (`-y`):
 
-	$ echo "ls ~" | at -m -t "$(datepicker -f %0Y%m%d%H%M)"
+	$ echo "ls ~" | at -m -t "$(datepicker -y -f %0Y%m%d%H%M)"
 
-**journalctl** — Select log entries newer than a given date:
+**journalctl** — Select log entries newer than a given date, selected from a span of 3 months (`-3`):
 
-	$ journalctl --since="$(datepicker -f '%Y-%m-%d %H:%M:%S')"
+	$ journalctl --since="$(datepicker -3 -f '%Y-%m-%d %H:%M:%S')"
 
-**mpick** — Select emails newer than a given date:
+**mpick** — Select emails newer than a given date in the current month, skipping time selection (`-d`):
 
 	$ mlist ~/mail/INBOX | mpick -t "date >= \"$(datepicker -d -f %Y-%m-%d)\""
 
