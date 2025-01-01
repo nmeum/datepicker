@@ -53,7 +53,8 @@ optsParser =
       OPT.str
       ( OPT.long "format"
           <> OPT.short 'f'
-          <> OPT.value "%c"
+          -- RFC 1123 format as per Go's time package
+          <> OPT.value "%a, %d %b %Y %T %Z"
           <> OPT.metavar "FORMAT"
           <> OPT.help "Format in which the date should be output"
       )
