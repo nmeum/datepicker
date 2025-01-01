@@ -2,7 +2,14 @@ module Main where
 
 import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optsPeriod)
 import Control.Exception (throwIO)
-import Data.Time.LocalTime (LocalTime (LocalTime), getZonedTime, localDay, zonedTimeToLocalTime)
+import Data.Time.LocalTime
+  ( LocalTime (LocalTime),
+    ZonedTime (ZonedTime),
+    getCurrentTimeZone,
+    getZonedTime,
+    localDay,
+    zonedTimeToLocalTime,
+  )
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
@@ -52,10 +59,14 @@ main = do
       range = optsPeriod (optDuration args) today
   lt@(LocalTime date _) <- UI.showView (M.mkMonthView range today) isTerm vty
 
+  timeZone <- getCurrentTimeZone
+  let mkZonedTime = \local -> ZonedTime local timeZone
+
   if optNoTime args
-    then V.shutdown vty >> putStrLn (format outFmt lt)
+    then V.shutdown vty >> putStrLn (format outFmt $ mkZonedTime lt)
     else do
       (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
       (LocalTime _ time) <- UI.showView (T.mkTimeView nowTime lt) isTerm vty
 
-      V.shutdown vty >> putStrLn (format outFmt $ LocalTime date time)
+      let res = LocalTime date time
+      V.shutdown vty >> putStrLn (format outFmt $ mkZonedTime res)
