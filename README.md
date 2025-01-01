@@ -38,6 +38,29 @@ A few example usages are provided below.
 Refer to the `--help` output for an overview of all supported command-line options.
 The command-line interface is still subject to change, more options will likely be added in future versions.
 
+### Key Bindings
+
+Two input views are provided: (1) A date selection view and (2) a time selection view.
+
+**Date Selection:**
+
+* `Esc` / `q`: Abort selection, exit with non-zero exit status
+* `Enter`: Confirm selection of focused date
+* `Up` and `Down`: Change focus to date in previous/next week
+* `Left` and `Right`: Change focus to previous/next date
+	* Note: For the first/last day of the week the focus is changed to the previous/next month
+	* This might change in a future version
+
+**Time Selection:**
+
+* `Esc` / `q`: Abort selection, exit with non-zero exit status
+* `Enter`: Confirm selection of specified time
+	* Note: If the time is invalid, confirming the selection won't be possible
+	* In a future version, this may cause an error to be emitted
+* `[0-9]`: Input a new digit at the highlighted location
+* `Backspace`: Move cursor to previous time digit
+* `Left` and `Right`: Move cursor to previous/next digit
+
 ### License
 
 This program is free software: you can redistribute it and/or modify it
