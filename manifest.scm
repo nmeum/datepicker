@@ -38,7 +38,7 @@
 
 (package
   (name "datepicker")
-  (version "0.1.0.0")
+  (version "0.1.0")
   (source (local-file "." "git-checkout"
                       #:recursive? #t))
   (build-system haskell-build-system)

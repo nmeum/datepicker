@@ -1,6 +1,6 @@
 cabal-version:      3.4
 name:               datepicker
-version:            0.1.0.0
+version:            0.1.0
 synopsis:           An fzf-like tool to interactively select a date in a provided format
 -- description:
 license:            GPL-3.0-or-later
