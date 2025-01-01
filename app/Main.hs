@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Main where
 
 import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optsPeriod)
@@ -30,7 +32,11 @@ isTerm _ = False
 -- This allows using datepicker within pipes where stdin/stdout is redirected.
 unixSettings :: IO VU.UnixSettings
 unixSettings = do
+#if MIN_VERSION_unix(2,8,0)
   ttyFd <- openFd "/dev/tty" ReadWrite defaultFileFlags
+#else
+  ttyFd <- openFd "/dev/tty" ReadWrite Nothing defaultFileFlags
+#endif
 
   -- Can't build upon defaultSettings here as it flushes standard input and
   -- if standard input is a pipe it may not necessarily be flushable.

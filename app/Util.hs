@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Util
   ( Weeks,
     monthWeeks,
@@ -16,13 +18,29 @@ module Util
   )
 where
 
+#if MIN_VERSION_base(4,19,0)
 import Data.List (findIndex, intersperse, (!?))
+#else
+import Data.List (findIndex, intersperse)
+#endif
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths, diffMonths)
 import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
+
+#if !MIN_VERSION_base(4,19,0)
+-- See https://github.com/ghc/ghc/commit/d53f6f4d98aabd6f5b28fb110db1da0f6db70a06
+(!?) :: [a] -> Int -> Maybe a
+xs !? n
+  | n < 0     = Nothing
+  | otherwise = foldr (\x r k -> case k of
+                                   0 -> Just x
+                                   _ -> r (k-1)) (const Nothing) xs n
+
+infixl 9  !?
+#endif
 
 splitEvery :: Int -> [a] -> [[a]]
 splitEvery _ [] = []

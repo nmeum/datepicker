@@ -18,9 +18,15 @@ Further, the command-line interface needs some refinement, specifically addition
 
 ### Installation
 
-To install this utility clone the repository and run:
+If you have a Haskell development environment setup and a compatible GHC version installed, you can install this utility by cloning the repository and running:
 
 	$ cabal install
+
+Alternatively, if you don't have a Haskell development environment, you can also install this software using [Guix].
+Guix will automatically install supported GHC version for you and add the binary to your `$PATH`.
+In order to install `datepicker` this way run the following command
+
+	$ guix time-machine -C channels.scm -- package
 
 ### Usage Example
 
@@ -88,5 +94,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [journalctl]: https://manpages.debian.org/unstable/systemd/journalctl.1.en.html#FILTERING_OPTIONS
 [mpick]: https://manpages.debian.org/unstable/mblaze/mpick.1.en.html#EXAMPLES
 [khal]: https://manpages.debian.org/unstable/khal/khal.1.en.html
+[Guix]: https://guix.gnu.org
 [formatTime]: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime
 [RFC 1123]: https://datatracker.ietf.org/doc/html/rfc1123
