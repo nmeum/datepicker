@@ -98,15 +98,15 @@ clockFont =
   ]
 
 mkTimeView :: TimeOfDay -> LocalTime -> TimeView
-mkTimeView cur = TimeView (NE.fromList $ toInput cur) 0
+mkTimeView cur = TimeView (toInput cur) 0
   where
-    toInput :: TimeOfDay -> [Int]
-    toInput t = fromInt (todHour t) ++ fromInt (todMin t)
+    toInput :: TimeOfDay -> NE.NonEmpty Int
+    toInput t = fromInt (todHour t) `NE.append` fromInt (todMin t)
 
-    fromInt :: Int -> [Int]
+    fromInt :: Int -> NE.NonEmpty Int
     fromInt n =
       let t = map digitToInt $ show n
-       in if length t < 2 then 0 : t else t
+       in if length t < 2 then 0 NE.:| t else NE.fromList t
 
 drawView :: TimeView -> I.Image
 drawView v@TimeView {initTime = t} =
