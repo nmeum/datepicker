@@ -28,7 +28,7 @@ In order to install `datepicker` this way run the following command
 
 	$ guix time-machine -C channels.scm -- package -f manifest.scm
 
-### Usage Example
+### Usage Examples
 
 By default, `datepicker` requires selection of both a date and a time and prints the selected date in the [RFC 1123] date format.
 The behavior can be customized using several command-line flags, e.g. the `-f` option allows specification of a different date format.
@@ -39,7 +39,7 @@ A few example usages are provided below.
 
 	$ echo "ls ~" | at -m -t "$(datepicker -y -f %0Y%m%d%H%M)"
 
-**journalctl** — Select log entries newer than a given date, selected from a span of 3 months (`-3`):
+**journalctl** — Select log entries newer than a given date from a span of three months (`-3`):
 
 	$ journalctl --since="$(datepicker -3 -f '%Y-%m-%d %H:%M:%S')"
 
