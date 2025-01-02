@@ -14,7 +14,7 @@ Inspired by [fzf], this utility allows visually selecting a date interactively t
 
 Basic functionally is operational and works.
 However, I am not entirely happy with the keyboard navigation in the date selection view yet (see below).
-Further, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have.
+Further, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have (see `TODO.md`).
 
 ### Installation
 
