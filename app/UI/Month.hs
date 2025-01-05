@@ -38,6 +38,32 @@ hasMonth :: MonthView -> Month -> Bool
 hasMonth MonthView {months = ms} m =
   m `elem` ms
 
+-- TODO: Make this customizable to implement the cal(1) -m option.
+firstDayOfWeek :: MonthView -> Bool
+firstDayOfWeek mv@MonthView {curDay = d} =
+  Cal.dayOfWeek d == Cal.Sunday
+    || Cal.periodFirstDay (currentMonth mv) == d
+
+-- TODO: Make this customizable to implement the cal(1) -m option.
+lastDayOfWeek :: MonthView -> Bool
+lastDayOfWeek mv@MonthView {curDay = d} =
+  Cal.dayOfWeek d == Cal.Saturday
+    || Cal.periodLastDay (currentMonth mv) == d
+
+firstWeekDayOfMonth :: MonthView -> Bool
+firstWeekDayOfMonth mv@MonthView {curDay = day} =
+  firstWeekDay (currentMonth mv) (Cal.dayOfWeek day) == day
+  where
+    firstWeekDay :: Month -> Cal.DayOfWeek -> Cal.Day
+    firstWeekDay m dw = Cal.firstDayOfWeekOnAfter dw (Cal.periodFirstDay m)
+
+lastWeekDayOfMonth :: MonthView -> Bool
+lastWeekDayOfMonth mv@MonthView {curDay = day} =
+  Just day == lastWeekDay (currentMonth mv) (Cal.dayOfWeek day)
+  where
+    lastWeekDay :: Month -> Cal.DayOfWeek -> Maybe Cal.Day
+    lastWeekDay m dw = find ((==) dw . Cal.dayOfWeek) $ reverse (Cal.periodAllDays m)
+
 ------------------------------------------------------------------------
 
 drawView :: MonthView -> I.Image
@@ -123,32 +149,6 @@ moveByDirection NextDay = Cal.addDays 1
 moveByDirection PrevDay = Cal.addDays (-1)
 moveByDirection NextWeek = addWeeks 1
 moveByDirection PrevWeek = addWeeks (-1)
-
--- TODO: Make this customizable to implement the cal(1) -m option.
-firstDayOfWeek :: MonthView -> Bool
-firstDayOfWeek mv@MonthView {curDay = d} =
-  Cal.dayOfWeek d == Cal.Sunday
-    || Cal.periodFirstDay (currentMonth mv) == d
-
--- TODO: Make this customizable to implement the cal(1) -m option.
-lastDayOfWeek :: MonthView -> Bool
-lastDayOfWeek mv@MonthView {curDay = d} =
-  Cal.dayOfWeek d == Cal.Saturday
-    || Cal.periodLastDay (currentMonth mv) == d
-
-firstWeekDayOfMonth :: MonthView -> Bool
-firstWeekDayOfMonth mv@MonthView {curDay = day} =
-  firstWeekDay (currentMonth mv) (Cal.dayOfWeek day) == day
-  where
-    firstWeekDay :: Month -> Cal.DayOfWeek -> Cal.Day
-    firstWeekDay m dw = Cal.firstDayOfWeekOnAfter dw (Cal.periodFirstDay m)
-
-lastWeekDayOfMonth :: MonthView -> Bool
-lastWeekDayOfMonth mv@MonthView {curDay = day} =
-  Just day == lastWeekDay (currentMonth mv) (Cal.dayOfWeek day)
-  where
-    lastWeekDay :: Month -> Cal.DayOfWeek -> Maybe Cal.Day
-    lastWeekDay m dw = find ((==) dw . Cal.dayOfWeek) $ reverse (Cal.periodAllDays m)
 
 moveCursor :: MonthView -> Direction -> Maybe MonthView
 moveCursor mv@MonthView {curDay = day, numCols = cols} dir
