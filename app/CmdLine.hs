@@ -1,5 +1,5 @@
 module CmdLine
-  ( Opts (optNoTime, optFormat, optDuration),
+  ( Opts (optNoTime, optLogical, optFormat, optDuration),
     cmdOpts,
     optsPeriod,
   )
@@ -15,6 +15,7 @@ data Duration = OneMonth | ThreeMonths | TwelveMonths
 
 data Opts = Opts
   { optNoTime :: Bool,
+    optLogical :: Bool,
     optFormat :: String,
     optDuration :: Duration
   }
@@ -48,6 +49,11 @@ optsParser =
       ( OPT.long "date-only"
           <> OPT.short 'd'
           <> OPT.help "Only require date selection, omitting time"
+      )
+    <*> OPT.switch
+      ( OPT.long "logical-move"
+          <> OPT.short 'l'
+          <> OPT.help "Always move cursor logically by week/date"
       )
     <*> OPT.option
       OPT.str

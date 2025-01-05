@@ -16,15 +16,17 @@ import Util
 data MonthView = MonthView
   { months :: [Month],
     curDay :: Cal.Day,
-    numCols :: Int
+    numCols :: Int,
+    movType :: Movement
   }
 
 instance View MonthView where
   draw = drawView
   process = processEvent
 
-mkMonthView :: [Month] -> Cal.Day -> MonthView
-mkMonthView ms day = MonthView ms day 3
+mkMonthView :: [Month] -> Cal.Day -> Bool -> MonthView
+mkMonthView ms day logicMove =
+  MonthView ms day 3 $ if logicMove then MLogical else MSpatial
 
 currentMonth :: MonthView -> Month
 currentMonth MonthView {months = ms, curDay = d} =
@@ -78,15 +80,14 @@ drawView MonthView {curDay = d, months = ms, numCols = cols} =
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
 processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) LocalTime
-processEvent view@MonthView {curDay = day} (E.EvKey key mods) =
-  let mov = if E.MShift `elem` mods then MLogical else MSpatial
-   in case key of
-        E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
-        E.KUp -> Left $ moveCursor view mov PrevWeek
-        E.KDown -> Left $ moveCursor view mov NextWeek
-        E.KRight -> Left $ moveCursor view mov NextDay
-        E.KLeft -> Left $ moveCursor view mov PrevDay
-        _ -> Left Nothing
+processEvent view@MonthView {curDay = day, movType = mov} (E.EvKey key _) =
+  case key of
+    E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
+    E.KUp -> Left $ moveCursor view mov PrevWeek
+    E.KDown -> Left $ moveCursor view mov NextWeek
+    E.KRight -> Left $ moveCursor view mov NextDay
+    E.KLeft -> Left $ moveCursor view mov PrevDay
+    _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = Left Nothing
 

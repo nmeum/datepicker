@@ -60,9 +60,6 @@ Two input views are provided: (1) A date selection view and (2) a time selection
 * `Up` and `Down`: Change focus to date in previous/next week
 * `Left` and `Right`: Change focus to previous/next date
 
-By default, movement using the arrow keys is spatial across multiple months in the view.
-Pressing the `Shift` modifier forces logical movement, by days/weeks.
-
 **Time Selection:**
 
 * `Esc` / `q`: Abort selection, exit with non-zero exit status

@@ -2,7 +2,7 @@
 
 module Main where
 
-import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optsPeriod)
+import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optLogical, optsPeriod)
 import Control.Exception (throwIO)
 import Data.Time.LocalTime
   ( LocalTime (LocalTime),
@@ -63,7 +63,8 @@ main = do
 
   let today = localDay localTime
       range = optsPeriod (optDuration args) today
-  lt@(LocalTime date _) <- UI.showView (M.mkMonthView range today) isTerm vty
+      mview = M.mkMonthView range today (optLogical args)
+  lt@(LocalTime date _) <- UI.showView mview isTerm vty
 
   timeZone <- getCurrentTimeZone
   let mkZonedTime = \local -> ZonedTime local timeZone
