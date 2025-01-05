@@ -144,12 +144,6 @@ drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
 data Direction = NextDay | PrevDay | NextWeek | PrevWeek
   deriving (Eq)
 
-moveByDirection :: Direction -> Cal.Day -> Cal.Day
-moveByDirection NextDay = Cal.addDays 1
-moveByDirection PrevDay = Cal.addDays (-1)
-moveByDirection NextWeek = addWeeks 1
-moveByDirection PrevWeek = addWeeks (-1)
-
 moveCursor :: MonthView -> Direction -> Maybe MonthView
 moveCursor mv@MonthView {curDay = day, numCols = cols} dir
   | lastDayOfWeek mv && dir == NextDay = moveSpatialHoriz mv 1 head
@@ -157,8 +151,14 @@ moveCursor mv@MonthView {curDay = day, numCols = cols} dir
   | firstWeekDayOfMonth mv && dir == PrevWeek = moveSpatialVert mv (cols * (-1)) reverse
   | lastWeekDayOfMonth mv && dir == NextWeek = moveSpatialVert mv cols id
   | otherwise =
-      let newDay = moveByDirection dir day
+      let newDay = moveLogical dir day
        in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
+
+moveLogical :: Direction -> Cal.Day -> Cal.Day
+moveLogical NextDay = Cal.addDays 1
+moveLogical PrevDay = Cal.addDays (-1)
+moveLogical NextWeek = addWeeks 1
+moveLogical PrevWeek = addWeeks (-1)
 
 moveSpatial ::
   MonthView ->
