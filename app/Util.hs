@@ -50,6 +50,7 @@ splitEvery n list = first : splitEvery n rest
 
 ------------------------------------------------------------------------
 
+-- TODO: type week
 type Weeks = [[Cal.Day]]
 
 monthWeeks :: Month -> Weeks

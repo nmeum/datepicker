@@ -2,7 +2,6 @@ module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.List (find)
-import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
@@ -33,7 +32,7 @@ hasDay MonthView {months = ms} d =
 
 hasMonth :: MonthView -> Month -> Bool
 hasMonth MonthView {months = ms} m =
-  any ((==) m) ms
+  m `elem` ms
 
 ------------------------------------------------------------------------
 
@@ -136,23 +135,52 @@ lastDayOfWeek mv@MonthView {curDay = d} =
   Cal.dayOfWeek d == Cal.Saturday
     || Cal.periodLastDay (currentMonth mv) == d
 
+firstWeekDayOfMonth :: MonthView -> Bool
+firstWeekDayOfMonth mv@MonthView {curDay = day} =
+  firstWeekDay (currentMonth mv) (Cal.dayOfWeek day) == day
+  where
+    firstWeekDay :: Month -> Cal.DayOfWeek -> Cal.Day
+    firstWeekDay m dw = Cal.firstDayOfWeekOnAfter dw (Cal.periodFirstDay m)
+
+lastWeekDayOfMonth :: MonthView -> Bool
+lastWeekDayOfMonth mv@MonthView {curDay = day} =
+  Just day == lastWeekDay (currentMonth mv) (Cal.dayOfWeek day)
+  where
+    lastWeekDay :: Month -> Cal.DayOfWeek -> Maybe Cal.Day
+    lastWeekDay m dw = find ((==) dw . Cal.dayOfWeek) $ reverse (Cal.periodAllDays m)
+
 moveCursor :: MonthView -> Direction -> Maybe MonthView
 moveCursor mv@MonthView {curDay = day} dir
-  | lastDayOfWeek mv && dir == NextDay = moveMonthwise mv 1 NE.head
-  | firstDayOfWeek mv && dir == PrevDay = moveMonthwise mv (-1) NE.last
-  -- \| firstWeekOfMonth mv && dir == _
-  -- \| lastWeekOfMonth mv && dir == _
+  | lastDayOfWeek mv && dir == NextDay = moveSpatialHoriz mv 1 head
+  | firstDayOfWeek mv && dir == PrevDay = moveSpatialHoriz mv (-1) last
+  | firstWeekDayOfMonth mv && dir == PrevWeek = moveSpatialVert mv (-3) reverse
+  | lastWeekDayOfMonth mv && dir == NextWeek = moveSpatialVert mv 3 id
   | otherwise =
       let newDay = moveByDirection dir day
        in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
 
--- TODO: We could make Weeks (Util.hs) a NonEmpty type.
-moveMonthwise :: MonthView -> Integer -> (NE.NonEmpty Cal.Day -> Cal.Day) -> Maybe MonthView
-moveMonthwise mv@MonthView {curDay = day} inc select =
+moveSpatial ::
+  MonthView ->
+  Integer ->
+  (Month -> Maybe [Cal.Day]) ->
+  ([Cal.Day] -> Maybe Cal.Day) ->
+  Maybe MonthView
+moveSpatial mv inc selectWeek selectDay =
   let curMonth = currentMonth mv
       newMonth = addMonths inc curMonth
    in if hasMonth mv newMonth
-        then
-          (\lst -> mv {curDay = select $ NE.fromList lst})
-            <$> nthWeekOfMonth newMonth (weekOfMonth day)
+        then (\d -> mv {curDay = d}) <$> (selectWeek newMonth >>= selectDay)
         else Nothing
+
+moveSpatialVert :: MonthView -> Integer -> ([Cal.Day] -> [Cal.Day]) -> Maybe MonthView
+moveSpatialVert mv@MonthView {curDay = day} inc proc =
+  let dayOfWeek = Cal.dayOfWeek day
+   in moveSpatial
+        mv
+        inc
+        (Just . proc . Cal.periodAllDays)
+        (find ((==) dayOfWeek . Cal.dayOfWeek))
+
+moveSpatialHoriz :: MonthView -> Integer -> ([Cal.Day] -> Cal.Day) -> Maybe MonthView
+moveSpatialHoriz mv@MonthView {curDay = day} inc select =
+  moveSpatial mv inc (\m -> nthWeekOfMonth m (weekOfMonth day)) (Just . select)
