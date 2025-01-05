@@ -13,8 +13,7 @@ Inspired by [fzf], this utility allows visually selecting a date interactively t
 ### Status
 
 Basic functionally is operational and works.
-However, I am not entirely happy with the keyboard navigation in the date selection view yet (see below).
-Further, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have (see `TODO.md`).
+However, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have (see `TODO.md`).
 
 ### Installation
 
@@ -60,8 +59,9 @@ Two input views are provided: (1) A date selection view and (2) a time selection
 * `Enter`: Confirm selection of focused date
 * `Up` and `Down`: Change focus to date in previous/next week
 * `Left` and `Right`: Change focus to previous/next date
-	* Note: For the first/last day of the week the focus is changed to the previous/next month
-	* This might change in a future version
+
+By default, movement using the arrow keys is spatial across multiple months in the view.
+Pressing the `Shift` modifier forces logical movement, by days/weeks.
 
 **Time Selection:**
 

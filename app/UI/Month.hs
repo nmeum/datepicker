@@ -78,14 +78,15 @@ drawView MonthView {curDay = d, months = ms, numCols = cols} =
 -- The return value specifies if the view has changed as a result
 -- of processing the event, if so, 'drawView' needs to be invoked.
 processEvent :: MonthView -> E.Event -> Either (Maybe MonthView) LocalTime
-processEvent view@MonthView {curDay = day} (E.EvKey key _mods) =
-  case key of
-    E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
-    E.KUp -> Left $ moveCursor view PrevWeek
-    E.KDown -> Left $ moveCursor view NextWeek
-    E.KRight -> Left $ moveCursor view NextDay
-    E.KLeft -> Left $ moveCursor view PrevDay
-    _ -> Left Nothing
+processEvent view@MonthView {curDay = day} (E.EvKey key mods) =
+  let mov = if E.MShift `elem` mods then MLogical else MSpatial
+   in case key of
+        E.KEnter -> Right $ LocalTime day (TimeOfDay 0 0 0)
+        E.KUp -> Left $ moveCursor view mov PrevWeek
+        E.KDown -> Left $ moveCursor view mov NextWeek
+        E.KRight -> Left $ moveCursor view mov NextDay
+        E.KLeft -> Left $ moveCursor view mov PrevDay
+        _ -> Left Nothing
 processEvent view (E.EvResize _ _) = Left $ Just view
 processEvent _ _ = Left Nothing
 
@@ -142,14 +143,21 @@ drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
 ------------------------------------------------------------------------
 
 data Direction = NextDay | PrevDay | NextWeek | PrevWeek
-  deriving (Eq)
+  deriving (Eq, Show)
 
-moveCursor :: MonthView -> Direction -> Maybe MonthView
-moveCursor mv@MonthView {curDay = day, numCols = cols} dir
-  | lastDayOfWeek mv && dir == NextDay = moveSpatialHoriz mv 1 head
-  | firstDayOfWeek mv && dir == PrevDay = moveSpatialHoriz mv (-1) last
-  | firstWeekDayOfMonth mv && dir == PrevWeek = moveSpatialVert mv (cols * (-1)) reverse
-  | lastWeekDayOfMonth mv && dir == NextWeek = moveSpatialVert mv cols id
+data Movement = MLogical | MSpatial
+  deriving (Eq, Show)
+
+moveCursor :: MonthView -> Movement -> Direction -> Maybe MonthView
+moveCursor mv@MonthView {curDay = day, numCols = cols} mov dir
+  | mov == MSpatial && lastDayOfWeek mv && dir == NextDay =
+      moveSpatialHoriz mv 1 head
+  | mov == MSpatial && firstDayOfWeek mv && dir == PrevDay =
+      moveSpatialHoriz mv (-1) last
+  | mov == MSpatial && firstWeekDayOfMonth mv && dir == PrevWeek =
+      moveSpatialVert mv (cols * (-1)) reverse
+  | mov == MSpatial && lastWeekDayOfMonth mv && dir == NextWeek =
+      moveSpatialVert mv cols id
   | otherwise =
       let newDay = moveLogical dir day
        in bool Nothing (Just mv {curDay = newDay}) (hasDay mv newDay)
