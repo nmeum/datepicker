@@ -2,6 +2,7 @@ module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.List (find)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
@@ -107,9 +108,10 @@ drawDay day curDay =
         `Attr.withBackColor` Attr.white
         `Attr.withForeColor` Attr.black
 
-drawWeeks :: Cal.Day -> Weeks -> I.Image
-drawWeeks curDay w =
-  I.vertCat $ zipWith zipFunc [0 ..] (map drawWeek w)
+drawWeeks :: Cal.Day -> NE.NonEmpty Week -> I.Image
+drawWeeks curDay weeks =
+  let w = NE.toList $ NE.map NE.toList weeks
+   in I.vertCat $ zipWith zipFunc [0 ..] (map drawWeek w)
   where
     zipFunc :: Int -> I.Image -> I.Image
     zipFunc i = horizPad weekWidth (i == 0)
@@ -152,11 +154,11 @@ data Movement = MLogical | MSpatial
 moveCursor :: MonthView -> Movement -> Direction -> Maybe MonthView
 moveCursor mv@MonthView {curDay = day, numCols = cols} mov dir
   | mov == MSpatial && lastDayOfWeek mv && dir == NextDay =
-      moveSpatialHoriz mv 1 head
+      moveSpatialHoriz mv 1 NE.head
   | mov == MSpatial && firstDayOfWeek mv && dir == PrevDay =
-      moveSpatialHoriz mv (-1) last
+      moveSpatialHoriz mv (-1) NE.last
   | mov == MSpatial && firstWeekDayOfMonth mv && dir == PrevWeek =
-      moveSpatialVert mv (cols * (-1)) reverse
+      moveSpatialVert mv (cols * (-1)) NE.reverse
   | mov == MSpatial && lastWeekDayOfMonth mv && dir == NextWeek =
       moveSpatialVert mv cols id
   | otherwise =
@@ -172,8 +174,8 @@ moveLogical PrevWeek = addWeeks (-1)
 moveSpatial ::
   MonthView ->
   Int ->
-  (Month -> Maybe [Cal.Day]) ->
-  ([Cal.Day] -> Maybe Cal.Day) ->
+  (Month -> Maybe Week) ->
+  (Week -> Maybe Cal.Day) ->
   Maybe MonthView
 moveSpatial mv inc selectWeek selectDay =
   let curMonth = currentMonth mv
@@ -182,15 +184,15 @@ moveSpatial mv inc selectWeek selectDay =
         then (\d -> mv {curDay = d}) <$> (selectWeek newMonth >>= selectDay)
         else Nothing
 
-moveSpatialVert :: MonthView -> Int -> ([Cal.Day] -> [Cal.Day]) -> Maybe MonthView
+moveSpatialVert :: MonthView -> Int -> (Week -> Week) -> Maybe MonthView
 moveSpatialVert mv@MonthView {curDay = day} inc proc =
   let dayOfWeek = Cal.dayOfWeek day
    in moveSpatial
         mv
         inc
-        (Just . proc . Cal.periodAllDays)
+        (Just . proc . NE.fromList . Cal.periodAllDays)
         (find ((==) dayOfWeek . Cal.dayOfWeek))
 
-moveSpatialHoriz :: MonthView -> Int -> ([Cal.Day] -> Cal.Day) -> Maybe MonthView
+moveSpatialHoriz :: MonthView -> Int -> (Week -> Cal.Day) -> Maybe MonthView
 moveSpatialHoriz mv@MonthView {curDay = day} inc select =
   moveSpatial mv inc (\m -> nthWeekOfMonth m (weekOfMonth day)) (Just . select)

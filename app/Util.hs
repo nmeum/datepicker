@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 
 module Util
-  ( Weeks,
+  ( Week,
     monthWeeks,
     weekOfMonth,
     nthWeekOfMonth,
@@ -18,11 +18,8 @@ module Util
   )
 where
 
-#if MIN_VERSION_base(4,19,0)
-import Data.List (findIndex, intersperse, (!?))
-#else
 import Data.List (findIndex, intersperse)
-#endif
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths, diffMonths)
@@ -30,17 +27,17 @@ import Data.Time.Format qualified as Fmt
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 
-#if !MIN_VERSION_base(4,19,0)
--- See https://github.com/ghc/ghc/commit/d53f6f4d98aabd6f5b28fb110db1da0f6db70a06
-(!?) :: [a] -> Int -> Maybe a
+infixl 9 !?
+
+{- ORMOLU_DISABLE -}
+-- From https://github.com/ghc/ghc/commit/d53f6f4d98aabd6f5b28fb110db1da0f6db70a06
+(!?) :: NE.NonEmpty a -> Int -> Maybe a
 xs !? n
   | n < 0     = Nothing
   | otherwise = foldr (\x r k -> case k of
                                    0 -> Just x
                                    _ -> r (k-1)) (const Nothing) xs n
-
-infixl 9  !?
-#endif
+{- ORMOLU_ENABLE -}
 
 splitEvery :: Int -> [a] -> [[a]]
 splitEvery _ [] = []
@@ -50,16 +47,15 @@ splitEvery n list = first : splitEvery n rest
 
 ------------------------------------------------------------------------
 
--- TODO: type week
-type Weeks = [[Cal.Day]]
+type Week = NE.NonEmpty Cal.Day
 
-monthWeeks :: Month -> Weeks
-monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
+monthWeeks :: Month -> NE.NonEmpty Week
+monthWeeks m = NE.fromList $ map NE.fromList (monthWeeks' $ Cal.periodFirstDay m)
   where
     weekOfDay :: Cal.Day -> [Cal.Day]
     weekOfDay = Cal.weekAllDays Cal.Sunday
 
-    monthWeeks' :: Cal.Day -> Weeks
+    monthWeeks' :: Cal.Day -> [[Cal.Day]]
     monthWeeks' d
       | Cal.dayPeriod d /= m = []
       | otherwise =
@@ -70,9 +66,9 @@ monthWeeks m = monthWeeks' $ Cal.periodFirstDay m
 weekOfMonth :: Cal.Day -> Int
 weekOfMonth d =
   let weeks = monthWeeks (Cal.dayPeriod d)
-   in fromJust $ findIndex (any ((==) d)) weeks
+   in fromJust $ findIndex (any ((==) d)) (NE.toList weeks)
 
-nthWeekOfMonth :: Month -> Int -> Maybe [Cal.Day]
+nthWeekOfMonth :: Month -> Int -> Maybe (NE.NonEmpty Cal.Day)
 nthWeekOfMonth m n = monthWeeks m !? n
 
 periodAllMonths :: (Cal.DayPeriod p) => p -> [Month]
