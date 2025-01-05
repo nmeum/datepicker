@@ -67,7 +67,7 @@ main = do
   lt@(LocalTime date _) <- UI.showView mview isTerm vty
 
   timeZone <- getCurrentTimeZone
-  let mkZonedTime = \local -> ZonedTime local timeZone
+  let mkZonedTime local = ZonedTime local timeZone
 
   if optNoTime args
     then V.shutdown vty >> putStrLn (format outFmt $ mkZonedTime lt)
