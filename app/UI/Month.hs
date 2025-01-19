@@ -6,7 +6,6 @@ import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
-import Data.Time.Format qualified as Fmt
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
@@ -128,14 +127,14 @@ drawMonthYear m =
     I.string Attr.defAttr (format "%B %Y" m)
 
 drawMonth :: Month -> Cal.Day -> I.Image
-drawMonth m curDay = drawMonthYear m I.<-> drawHeader locale I.<-> weeks
+drawMonth m curDay = drawMonthYear m I.<-> drawHeader I.<-> weeks
   where
     weeks :: I.Image
     weeks = drawWeeks curDay (monthWeeks m)
 
-drawHeader :: Fmt.TimeLocale -> I.Image
-drawHeader Fmt.TimeLocale {Fmt.wDays = w} =
-  let wdays = map snd w
+drawHeader :: I.Image
+drawHeader =
+  let wdays = map (format "%a") (take 7 $ (enumFrom Cal.Sunday))
       items = map (I.string Attr.defAttr . shortenWeekDay) wdays
    in I.horizCat $ addSep items
   where

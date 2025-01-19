@@ -11,7 +11,6 @@ module Util
     vertCenter,
     format,
     addSep,
-    locale,
     makePad,
     periodAllMonths,
     splitEvery,
@@ -82,12 +81,9 @@ addWeeks n = Cal.addDays (n * 7)
 
 ------------------------------------------------------------------------
 
--- TODO: Make this configurable
-locale :: Fmt.TimeLocale
-locale = Fmt.defaultTimeLocale
-
+-- TODO: Make the default locale configurable
 format :: (Fmt.FormatTime t) => String -> t -> String
-format = Fmt.formatTime locale
+format = Fmt.formatTime Fmt.defaultTimeLocale
 
 addSep :: [I.Image] -> [I.Image]
 addSep = intersperse (I.char Attr.defAttr ' ')
