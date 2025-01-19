@@ -1,5 +1,5 @@
 module CmdLine
-  ( Opts (optNoTime, optLogical, optFormat, optDuration),
+  ( Opts (optNoTime, optLogical, optFormat, optDuration, optMonday),
     cmdOpts,
     optsPeriod,
   )
@@ -17,6 +17,7 @@ data Opts = Opts
   { optNoTime :: Bool,
     optLogical :: Bool,
     optFormat :: String,
+    optMonday :: Bool,
     optDuration :: Duration
   }
 
@@ -63,6 +64,11 @@ optsParser =
           <> OPT.value "%a, %d %b %Y %T %Z"
           <> OPT.metavar "FORMAT"
           <> OPT.help "Format in which the date should be output"
+      )
+    <*> OPT.switch
+      ( OPT.long "monday"
+          <> OPT.short 'm'
+          <> OPT.help "Treat monday as the first day of the week"
       )
     <*> durationParser
 

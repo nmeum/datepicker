@@ -2,8 +2,17 @@
 
 module Main where
 
-import CmdLine (cmdOpts, optDuration, optFormat, optNoTime, optLogical, optsPeriod)
+import CmdLine
+  ( cmdOpts,
+    optDuration,
+    optFormat,
+    optLogical,
+    optMonday,
+    optNoTime,
+    optsPeriod,
+  )
 import Control.Exception (throwIO)
+import Data.Time.Calendar qualified as Cal
 import Data.Time.LocalTime
   ( LocalTime (LocalTime),
     ZonedTime (ZonedTime),
@@ -63,7 +72,12 @@ main = do
 
   let today = localDay localTime
       range = optsPeriod (optDuration args) today
-      mview = M.mkMonthView range today (optLogical args)
+      mview =
+        M.mkMonthView
+          range
+          today
+          (if optMonday args then Cal.Monday else Cal.Sunday)
+          (optLogical args)
   lt@(LocalTime date _) <- UI.showView mview isTerm vty
 
   timeZone <- getCurrentTimeZone

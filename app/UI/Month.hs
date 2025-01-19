@@ -1,7 +1,7 @@
 module UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
-import Data.List (find)
+import Data.List (find, findIndex)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
@@ -17,16 +17,19 @@ data MonthView = MonthView
   { months :: [Month],
     curDay :: Cal.Day,
     numCols :: Int,
-    movType :: Movement
+    movType :: Movement,
+    weekOrd :: NE.NonEmpty Cal.DayOfWeek
   }
 
 instance View MonthView where
   draw = drawView
   process = processEvent
 
-mkMonthView :: [Month] -> Cal.Day -> Bool -> MonthView
-mkMonthView ms day logicMove =
-  MonthView ms day 3 $ if logicMove then MLogical else MSpatial
+mkMonthView :: [Month] -> Cal.Day -> Cal.DayOfWeek -> Bool -> MonthView
+mkMonthView ms day firstWeekDay logicMove =
+  let week = take 7 (enumFrom firstWeekDay)
+      move = if logicMove then MLogical else MSpatial
+   in MonthView ms day 3 move $ NE.fromList week
 
 currentMonth :: MonthView -> Month
 currentMonth MonthView {months = ms, curDay = d} =
@@ -42,14 +45,14 @@ hasMonth MonthView {months = ms} m =
 
 -- TODO: Make this customizable to implement the cal(1) -m option.
 firstDayOfWeek :: MonthView -> Bool
-firstDayOfWeek mv@MonthView {curDay = d} =
-  Cal.dayOfWeek d == Cal.Sunday
+firstDayOfWeek mv@MonthView {curDay = d, weekOrd = ord} =
+  Cal.dayOfWeek d == NE.head ord
     || Cal.periodFirstDay (currentMonth mv) == d
 
 -- TODO: Make this customizable to implement the cal(1) -m option.
 lastDayOfWeek :: MonthView -> Bool
-lastDayOfWeek mv@MonthView {curDay = d} =
-  Cal.dayOfWeek d == Cal.Saturday
+lastDayOfWeek mv@MonthView {curDay = d, weekOrd = ord} =
+  Cal.dayOfWeek d == NE.last ord
     || Cal.periodLastDay (currentMonth mv) == d
 
 firstWeekDayOfMonth :: MonthView -> Bool
@@ -69,12 +72,12 @@ lastWeekDayOfMonth mv@MonthView {curDay = day} =
 ------------------------------------------------------------------------
 
 drawView :: MonthView -> I.Image
-drawView MonthView {curDay = d, months = ms, numCols = cols} =
+drawView MonthView {curDay = d, months = ms, numCols = cols, weekOrd = ord} =
   I.vertCat (map I.horizCat $ splitEvery cols (map drawView' ms))
   where
     drawView' :: Month -> I.Image
     drawView' m =
-      let img = drawMonth m d
+      let img = drawMonth m ord d
        in img I.<|> makePad 2 (I.imageHeight img) I.<-> makePad weekWidth 1
 
 -- The return value specifies if the view has changed as a result
@@ -126,17 +129,17 @@ drawMonthYear m =
   horizCenter weekWidth $
     I.string Attr.defAttr (format "%B %Y" m)
 
-drawMonth :: Month -> Cal.Day -> I.Image
-drawMonth m curDay = drawMonthYear m I.<-> drawHeader I.<-> weeks
+drawMonth :: Month -> NE.NonEmpty Cal.DayOfWeek -> Cal.Day -> I.Image
+drawMonth m ord curDay = drawMonthYear m I.<-> drawHeader ord I.<-> weeks
   where
     weeks :: I.Image
-    weeks = drawWeeks curDay (monthWeeks m)
+    weeks = drawWeeks curDay (monthWeeks m $ NE.head ord)
 
-drawHeader :: I.Image
-drawHeader =
-  let wdays = map (format "%a") (take 7 $ (enumFrom Cal.Sunday))
-      items = map (I.string Attr.defAttr . shortenWeekDay) wdays
-   in I.horizCat $ addSep items
+drawHeader :: NE.NonEmpty Cal.DayOfWeek -> I.Image
+drawHeader ord =
+  let wdays = NE.map (format "%a") ord
+      items = NE.map (I.string Attr.defAttr . shortenWeekDay) wdays
+   in I.horizCat $ addSep (NE.toList items)
   where
     shortenWeekDay :: String -> String
     shortenWeekDay (f : s : _xs) = [f, s]
@@ -193,5 +196,25 @@ moveSpatialVert mv@MonthView {curDay = day} inc proc =
         (find ((==) dayOfWeek . Cal.dayOfWeek))
 
 moveSpatialHoriz :: MonthView -> Int -> (Week -> Cal.Day) -> Maybe MonthView
-moveSpatialHoriz mv@MonthView {curDay = day} inc select =
-  moveSpatial mv inc (\m -> nthWeekOfMonth m (weekOfMonth day)) (Just . select)
+moveSpatialHoriz mv@MonthView {curDay = day, weekOrd = ord} inc select =
+  moveSpatial mv inc (\m -> monthWeeks m f !? weekOfMonth day) (Just . select)
+  where
+    f :: Cal.DayOfWeek
+    f = NE.head ord
+
+    weekOfMonth :: Cal.Day -> Int
+    weekOfMonth d =
+      let weeks = monthWeeks (Cal.dayPeriod d) f
+       in fromJust $ findIndex (elem d) (NE.toList weeks)
+
+{- ORMOLU_DISABLE -}
+-- From https://github.com/ghc/ghc/commit/d53f6f4d98aabd6f5b28fb110db1da0f6db70a06
+(!?) :: NE.NonEmpty a -> Int -> Maybe a
+xs !? n
+  | n < 0     = Nothing
+  | otherwise = foldr (\x r k -> case k of
+                                   0 -> Just x
+                                   _ -> r (k-1)) (const Nothing) xs n
+
+infixl 9 !?
+{- ORMOLU_ENABLE -}
