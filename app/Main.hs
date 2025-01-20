@@ -14,7 +14,6 @@ import CmdLine
     optsPeriod,
   )
 import Control.Exception (throwIO)
-import Data.Maybe (fromMaybe)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.LocalTime
   ( LocalTime (LocalTime),
@@ -73,9 +72,11 @@ main = do
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
 
-  let cTime = optTime args >>= getTime localTime
-      today = fromMaybe (localDay localTime) cTime
-      range = optsPeriod (optDuration args) today
+  today <- case optTime args of
+            Nothing -> pure $ localDay localTime
+            Just it -> getTime localTime it
+
+  let range = optsPeriod (optDuration args) today
       mview =
         M.mkMonthView
           range

@@ -23,13 +23,13 @@ data CmdTime = CmdTime String (Maybe String)
 firstDayInMY :: Cal.Year -> Cal.MonthOfYear -> Day
 firstDayInMY y my = Cal.periodFirstDay $ YearMonth y my
 
-parseMonth :: String -> Maybe Month
+parseMonth :: String -> IO Month
 parseMonth input =
   Fmt.parseTimeM False locale "%B" input
     <|> Fmt.parseTimeM False locale "%b" input
     <|> Fmt.parseTimeM False locale "%m" input
 
-getTime :: LocalTime -> CmdTime -> Maybe Day
+getTime :: LocalTime -> CmdTime -> IO Day
 getTime _ (CmdTime month (Just year)) = do
   (YearMonth _ my) <- parseMonth month
   pure (firstDayInMY (read year) my)
