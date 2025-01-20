@@ -69,9 +69,7 @@ main = do
   args <- execParser cmdOpts
   let outFmt = optFormat args
 
-  vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   localTime <- zonedTimeToLocalTime <$> getZonedTime
-
   today <- case optTime args of
             Nothing -> pure $ localDay localTime
             Just it -> getTime localTime it
@@ -83,6 +81,8 @@ main = do
           today
           (if optMonday args then Cal.Monday else Cal.Sunday)
           (optLogical args)
+
+  vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
   lt@(LocalTime date _) <- UI.showView mview isTerm vty
 
   timeZone <- getCurrentTimeZone
