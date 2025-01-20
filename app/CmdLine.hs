@@ -1,15 +1,43 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module CmdLine
-  ( Opts (optNoTime, optLogical, optFormat, optDuration, optMonday),
+  ( Opts (..),
+    CmdTime,
+    getTime,
     cmdOpts,
     optsPeriod,
   )
 where
 
+import Control.Applicative ((<|>))
 import Data.Time.Calendar qualified as Cal
-import Data.Time.Calendar.Month (Month, addMonths)
-import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
+import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
+import Data.Time.Calendar.OrdinalDate (Day, toOrdinalDate)
+import Data.Time.Format qualified as Fmt
+import Data.Time.LocalTime (LocalTime (LocalTime))
 import Options.Applicative qualified as OPT
-import Util (periodAllMonths)
+import Util (locale, periodAllMonths)
+
+data CmdTime = CmdTime String (Maybe String)
+
+firstDayInMY :: Cal.Year -> Cal.MonthOfYear -> Day
+firstDayInMY y my = Cal.periodFirstDay $ YearMonth y my
+
+parseMonth :: String -> Maybe Month
+parseMonth input =
+  Fmt.parseTimeM False locale "%B" input
+    <|> Fmt.parseTimeM False locale "%b" input
+    <|> Fmt.parseTimeM False locale "%m" input
+
+getTime :: LocalTime -> CmdTime -> Maybe Day
+getTime _ (CmdTime month (Just year)) = do
+  (YearMonth _ my) <- parseMonth month
+  pure (firstDayInMY (read year) my)
+getTime (LocalTime cd _) (CmdTime month Nothing) = do
+  (YearMonth _ my) <- parseMonth month
+  pure (firstDayInMY (fst $ toOrdinalDate cd) my)
+
+------------------------------------------------------------------------
 
 data Duration = OneMonth | ThreeMonths | TwelveMonths
 
@@ -18,7 +46,8 @@ data Opts = Opts
     optLogical :: Bool,
     optFormat :: String,
     optMonday :: Bool,
-    optDuration :: Duration
+    optDuration :: Duration,
+    optTime :: Maybe CmdTime
   }
 
 durationParser :: OPT.Parser Duration
@@ -42,6 +71,13 @@ durationParser =
           <> OPT.short 'y'
           <> OPT.help "Display the entire year"
       )
+
+timeParser :: OPT.Parser CmdTime
+timeParser =
+  CmdTime
+    <$> OPT.argument OPT.str (OPT.metavar "month")
+    <*> OPT.optional
+      (OPT.argument OPT.str (OPT.metavar "year"))
 
 optsParser :: OPT.Parser Opts
 optsParser =
@@ -71,6 +107,7 @@ optsParser =
           <> OPT.help "Treat monday as the first day of the week"
       )
     <*> durationParser
+    <*> OPT.optional timeParser
 
 ------------------------------------------------------------------------
 

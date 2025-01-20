@@ -7,6 +7,7 @@ module Util
     horizPad,
     horizCenter,
     vertCenter,
+    locale,
     format,
     addSep,
     makePad,
@@ -59,8 +60,11 @@ addWeeks n = Cal.addDays (n * 7)
 ------------------------------------------------------------------------
 
 -- TODO: Make the default locale configurable
+locale :: Fmt.TimeLocale
+locale = Fmt.defaultTimeLocale
+
 format :: (Fmt.FormatTime t) => String -> t -> String
-format = Fmt.formatTime Fmt.defaultTimeLocale
+format = Fmt.formatTime locale
 
 addSep :: [I.Image] -> [I.Image]
 addSep = intersperse (I.char Attr.defAttr ' ')
