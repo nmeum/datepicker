@@ -33,3 +33,20 @@ executable datepicker
                     , optparse-applicative >=0.17.0.0
     hs-source-dirs:   app
     default-language: GHC2021
+
+test-suite datepicker-test
+    import:           warnings
+    default-language: GHC2021
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    other-modules:    Tmux
+    build-depends:
+        base,
+        mtl,
+        bytestring,
+        process,
+        tasty        >=1.4.3,
+        tasty-golden >=2.3.5,
+        tasty-hunit  >=0.10,
+        tasty-tmux   >=0.1.0.5,
