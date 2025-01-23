@@ -41,6 +41,7 @@ test-suite datepicker-test
     hs-source-dirs:   test
     main-is:          Main.hs
     other-modules:    Tmux
+                    , Util
     build-depends:
         base,
         mtl,
