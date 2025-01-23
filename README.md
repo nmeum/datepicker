@@ -27,6 +27,13 @@ In order to install `datepicker` this way run the following command
 
 	$ guix time-machine -C channels.scm -- package -f manifest.scm
 
+### Tests
+
+A test suite is available, it performs several tests on the TUI using [tmux] and requires the `datepicker` binary in your `$PATH`.
+Once these requirements are satisfied, it can be invoked using:
+
+	$ cabal test
+
 ### Usage Examples
 
 By default, `datepicker` requires selection of both a date and a time and prints the selected date in the [RFC 1123] date format.
@@ -94,3 +101,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [Guix]: https://guix.gnu.org
 [formatTime]: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime
 [RFC 1123]: https://datatracker.ietf.org/doc/html/rfc1123
+[tmux]: https://tmux.github.io
