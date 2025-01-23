@@ -6,7 +6,7 @@ import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (MonadIO, MonadReader)
 import Control.Monad.State.Class (MonadState)
-import qualified Data.ByteString as B
+import Data.ByteString qualified as B
 import Data.List (find, isSuffixOf)
 import Data.Maybe (fromJust)
 import Data.String (fromString)
@@ -20,8 +20,10 @@ timezone :: String
 timezone = "CET"
 
 -- Header written by datepicker, used to detect application startup.
+--
+-- Note: This is only a substring of the header so that it works with -m.
 header :: B.ByteString
-header = "Su Mo Tu We Th Fr Sa"
+header = "Tu We Th Fr Sa"
 
 startApplication ::
   (HasTmuxSession a, MonadReader a m, MonadIO m) =>
@@ -67,29 +69,79 @@ sendKeys_ s c = void (sendKeys s c)
 
 -----------------------------------------------------------------------
 
-selectNextDay :: TestCase sharedEnv
-selectNextDay = withTmuxSession' "select next week" $ \_ -> do
-  startApplication ["-d"] "03 2020"
+selectDateSpatially :: TestCase sharedEnv
+selectDateSpatially =
+  withTmuxSession' "select date using spatial movement" $ \_ -> do
+    startApplication ["--date-only"] "dec 2024"
 
-  -- selection: 2020-03-01
-  sendKeys_ "Right" Unconditional
-  -- selection: 2024-03-02
+    -- selection: 2024-12-01
+    sendKeys_ "Up" Unconditional
+    sendKeys_ "Left" Unconditional
+    -- selection: 2024-12-01
+    sendKeys_ "Down" Unconditional
+    -- selection: 2024-12-08
+    sendKeys_ "Right" Unconditional
+    -- selection: 2024-12-09
+    sendKeys_ "Right" Unconditional
+    -- selection: 2024-12-10
+    sendKeys_ "Down" Unconditional
+    -- selection: 2024-12-17
+    sendKeys_ "Down" Unconditional
+    -- selection: 2024-12-24
+    sendKeys_ "Left" Unconditional
+    -- selection: 2024-12-23
 
-  selectDate >>= assertDate "Mon, 02 Mar 2020 00:00:00 CET"
+    selectDate >>= assertDate "Mon, 23 Dec 2024 00:00:00 CET"
 
-selectNextWeek :: TestCase sharedEnv
-selectNextWeek = withTmuxSession' "select next week" $ \_ -> do
-  startApplication ["-d"] "dec 2024"
+selectDateLogically :: TestCase sharedEnv
+selectDateLogically =
+  withTmuxSession' "select date using logical movement" $ \_ -> do
+    startApplication ["--date-only", "--logical-move"] "02 2020"
 
-  -- selection: 2024-12-01
-  sendKeys_ "Down" Unconditional
-  -- selection: 2024-12-08
+    -- 2020-02-01 is a Saturday, so moving right, in logical mode, will
+    -- directly go to the next week. Hence moving up after should do nothing.
+    sendKeys_ "Right" Unconditional
+    -- selection: 2020-02-02
+    sendKeys_ "Up" Unconditional
+    -- selection: 2020-02-02
+    sendKeys_ "Down" Unconditional
+    -- selection: 2020-02-09
+    sendKeys_ "Left" Unconditional
+    -- selection: 2020-02-08
 
-  selectDate >>= assertDate "Sun, 08 Dec 2024 00:00:00 CET"
+    selectDate >>= assertDate "Sat, 08 Feb 2020 00:00:00 CET"
+
+selectDateWithCustomFormat :: TestCase sharedEnv
+selectDateWithCustomFormat =
+  withTmuxSession' "custom date format" $ \_ -> do
+    startApplication ["--date-only", "--format", "'%0Y%m%d %Z'"] "July 1998"
+
+    sendKeys_ "Enter" Unconditional
+    selectDate >>= assertDate "19980701 CET"
+
+selectDateMondayWeekstart :: TestCase sharedEnv
+selectDateMondayWeekstart =
+  withTmuxSession' "--monday option" $ \_ -> do
+    startApplication ["--date-only", "--monday"] "Jan 2025"
+
+    sendKeys_ "Down" Unconditional
+    -- selection: 2025-08-01
+    sendKeys_ "Left" Unconditional
+    -- selection: 2025-07-01
+    sendKeys_ "Left" Unconditional
+    sendKeys_ "Left" Unconditional
+    sendKeys_ "Left" Unconditional
+    sendKeys_ "Left" Unconditional
+    -- selection: 2025-06-01
+
+    sendKeys_ "Enter" Unconditional
+    selectDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 CET"
 
 tmuxTests :: TestTree
 tmuxTests =
   testTmux'
-    [ selectNextDay,
-      selectNextWeek
+    [ selectDateSpatially,
+      selectDateLogically,
+      selectDateWithCustomFormat,
+      selectDateMondayWeekstart
     ]
