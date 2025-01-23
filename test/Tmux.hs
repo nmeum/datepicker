@@ -38,10 +38,8 @@ startApplication args dateInput = do
       (Substring header)
   pure ()
 
-selectDate :: (HasTmuxSession a, MonadReader a m, MonadState Capture m, MonadIO m) => m String
-selectDate = do
-  -- Submit the current position in the calendar.
-  sendKeys_ "Enter" Unconditional
+captureDate :: (HasTmuxSession a, MonadReader a m, MonadState Capture m, MonadIO m) => m String
+captureDate = do
   _ <-
     waitForCondition
       (Substring $ fromString timezone)
@@ -91,7 +89,8 @@ selectDateSpatially =
     sendKeys_ "Left" Unconditional
     -- selection: 2024-12-23
 
-    selectDate >>= assertDate "Mon, 23 Dec 2024 00:00:00 CET"
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Mon, 23 Dec 2024 00:00:00 CET"
 
 selectDateLogically :: TestCase sharedEnv
 selectDateLogically =
@@ -109,7 +108,8 @@ selectDateLogically =
     sendKeys_ "Left" Unconditional
     -- selection: 2020-02-08
 
-    selectDate >>= assertDate "Sat, 08 Feb 2020 00:00:00 CET"
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Sat, 08 Feb 2020 00:00:00 CET"
 
 selectDateWithCustomFormat :: TestCase sharedEnv
 selectDateWithCustomFormat =
@@ -117,7 +117,7 @@ selectDateWithCustomFormat =
     startApplication ["--date-only", "--format", "'%0Y%m%d %Z'"] "July 1998"
 
     sendKeys_ "Enter" Unconditional
-    selectDate >>= assertDate "19980701 CET"
+    captureDate >>= assertDate "19980701 CET"
 
 selectDateMondayWeekstart :: TestCase sharedEnv
 selectDateMondayWeekstart =
@@ -135,7 +135,46 @@ selectDateMondayWeekstart =
     -- selection: 2025-06-01
 
     sendKeys_ "Enter" Unconditional
-    selectDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 CET"
+    captureDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 CET"
+
+selectTime :: TestCase sharedEnv
+selectTime =
+  withTmuxSession' "select date and time" $ \_ -> do
+    startApplication [] "03 1900"
+
+    sendKeys_ "Enter" Unconditional
+    sendKeys_ "2342" Unconditional
+    sendKeys_ "Enter" Unconditional
+
+    captureDate >>= assertDate "Thu, 01 Mar 1900 23:42:00 CET"
+
+selectTimeAndOverflow :: TestCase sharedEnv
+selectTimeAndOverflow =
+  withTmuxSession' "select time, delete, and re-enter" $ \_ -> do
+    startApplication [] "03 1900"
+
+    sendKeys_ "Enter" (Substring $ fromString "March")
+    sendKeys_ "1111 2222" Unconditional
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Thu, 01 Mar 1900 22:22:00 CET"
+
+selectTimeBackspace :: TestCase sharedEnv
+selectTimeBackspace =
+  withTmuxSession' "select time, delete, and re-enter" $ \_ -> do
+    startApplication [] "03 1900"
+
+    sendKeys_ "Enter" (Substring $ fromString "March")
+    sendKeys_ "1 2 3 4" Unconditional
+    sendKeys_ "c-h" Unconditional
+    sendKeys_ "5" Unconditional
+    sendKeys_ "c-h" Unconditional
+    sendKeys_ "c-h" Unconditional
+    sendKeys_ "c-h" Unconditional
+    sendKeys_ "4" Unconditional
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Thu, 01 Mar 1900 14:35:00 CET"
 
 tmuxTests :: TestTree
 tmuxTests =
@@ -143,5 +182,8 @@ tmuxTests =
     [ selectDateSpatially,
       selectDateLogically,
       selectDateWithCustomFormat,
-      selectDateMondayWeekstart
+      selectDateMondayWeekstart,
+      selectTime,
+      selectTimeAndOverflow,
+      selectTimeBackspace
     ]
