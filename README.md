@@ -13,7 +13,7 @@ Inspired by [fzf], this utility allows visually selecting a date interactively t
 ### Status
 
 Basic functionally is operational and works.
-However, the command-line interface needs some refinement, specifically additional display options from [cal] (e.g. `-m`) would be nice to have (see `TODO.md`).
+The current feature set is currently being stabilized, more advanced features (like fzf-like previews) may be added in the future.
 
 ### Installation
 
