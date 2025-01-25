@@ -2,6 +2,7 @@
 
 module Tmux (tmuxTests) where
 
+import Control.Monad (replicateM_)
 import Test.Tasty
 import Test.Tasty.Tmux
 import Util
@@ -115,6 +116,66 @@ selectTimeBackspace =
     sendKeys_ "Enter" Unconditional
     captureDate >>= assertDate "Thu, 01 Mar 1900 14:35:00 CET"
 
+moveSpatiallyVertAcrossMonths :: TestCase sharedEnv
+moveSpatiallyVertAcrossMonths =
+  withTmuxSession' "move spatially across month boundary" $ \_ -> do
+    startApplication ["-d", "-3"] "Jan 2030"
+
+    -- selection: 2030-01-01
+    sendKeys_ "Left" (Substring "January")
+    -- selection: 2029-12-01
+    sendKeys_ "Down" Unconditional
+    sendKeys_ "Down" Unconditional
+    sendKeys_ "Down" Unconditional
+    sendKeys_ "Down" Unconditional
+    -- selection: 2029-12-29
+    sendKeys_ "Right" Unconditional
+    -- selection: 2030-01-27
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Sun, 27 Jan 2030 00:00:00 CET"
+
+moveSpatiallyVertBoundary :: TestCase sharedEnv
+moveSpatiallyVertBoundary =
+  withTmuxSession' "move spatially across month boundary" $ \_ -> do
+    startApplication ["-d", "--three"] "nov 2029"
+
+    -- selection: 2029-11-01
+    sendKeys_ "Down" (Substring "November")
+    -- selection: 2029-11-08
+    replicateM_ 3 (sendKeys_ "Right" Unconditional)
+    -- selection: 2029-12-02
+    replicateM_ 4 (sendKeys_ "Down" Unconditional)
+    -- selection: 2029-12-30
+    replicateM_ 4 (sendKeys_ "Left" Unconditional)
+    replicateM_ 4 (sendKeys_ "Down" Unconditional)
+    replicateM_ 4 (sendKeys_ "Down" Unconditional)
+    replicateM_ 4 (sendKeys_ "Right" Unconditional)
+    replicateM_ 4 (sendKeys_ "Right" Unconditional)
+    -- selection: 2029-12-31
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Mon, 31 Dec 2029 00:00:00 CET"
+
+moveSpatiallyHorizAcrossMonths :: TestCase sharedEnv
+moveSpatiallyHorizAcrossMonths =
+  withTmuxSession' "move horizontally across months" $ \_ -> do
+    startApplication ["-d", "-y"] "jun 2065"
+
+    -- selection: 2065-06-01
+    sendKeys_ "Up" (Substring "December")
+    -- selection: 2065-03-30
+    sendKeys_ "Up" Unconditional
+    -- selection: 2065-03-23
+    sendKeys_ "Left" Unconditional
+    sendKeys_ "Left" Unconditional
+    -- selection: 2065-02-28
+    replicateM_ 14 (sendKeys_ "Down" Unconditional)
+    -- selection: 2065-11-28
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Sat, 28 Nov 2065 00:00:00 CET"
+
 tmuxTests :: TestTree
 tmuxTests =
   testTmux'
@@ -124,5 +185,8 @@ tmuxTests =
       selectDateMondayWeekstart,
       selectTime,
       selectTimeAndOverflow,
-      selectTimeBackspace
+      selectTimeBackspace,
+      moveSpatiallyVertAcrossMonths,
+      moveSpatiallyVertBoundary,
+      moveSpatiallyHorizAcrossMonths
     ]
