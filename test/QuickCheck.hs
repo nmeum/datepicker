@@ -10,10 +10,25 @@ import Test.Tasty
 import Test.Tasty.QuickCheck
   ( Arbitrary,
     arbitrary,
-    chooseAny,
+    chooseEnum,
     chooseInteger,
     testProperty,
   )
+
+instance Arbitrary Month where
+  arbitrary = do
+    m <- chooseInteger (1, 12)
+    y <- chooseInteger (0, 2030)
+    pure $ MkMonth ((y * 12) + (m - 1))
+
+instance Arbitrary Cal.DayOfWeek where
+  arbitrary = chooseEnum (Cal.Monday, Cal.Sunday)
+
+weekList :: Month -> NE.NonEmpty Cal.Day
+weekList m =
+  NE.fromList $ concatMap NE.toList (monthWeeks m Cal.Monday)
+
+------------------------------------------------------------------------
 
 monthWeeksAmount :: TestTree
 monthWeeksAmount =
@@ -21,40 +36,42 @@ monthWeeksAmount =
     "week amount >= 4"
     (\m -> NE.length (monthWeeks (m :: Month) Cal.Sunday) >= 4)
 
-monthWeeksStartOfMonth :: TestTree
-monthWeeksStartOfMonth =
-  testProperty "first day of first week is start of month" propFirstDay
-  where
-    propFirstDay :: Month -> Bool
-    propFirstDay m =
-      let weeks = monthWeeks m Cal.Sunday
-       in (NE.head $ NE.head weeks) == Cal.periodFirstDay m
-
 monthWeeksOrdered :: TestTree
 monthWeeksOrdered =
   testProperty "weeks of month are ordered properly" propOrdered
   where
-    isSorted :: (Ord a) => [a] -> Bool
-    isSorted [] = True
-    isSorted [_] = True
-    isSorted (x : y : xs)
-      | x >= y = False
-      | otherwise = isSorted (y : xs)
+    equalsDays :: Month -> [Integer] -> [Cal.Day] -> Bool
+    equalsDays m nth days =
+      let fstDay = Cal.periodFirstDay m
+       in all (\(d, n) -> Cal.addDays n fstDay == d) (zip days nth)
 
     propOrdered :: Month -> Bool
-    propOrdered m = isSorted $ concat (NE.map NE.toList $ monthWeeks m Cal.Monday)
+    propOrdered m = equalsDays m [0 ..] (NE.toList $ weekList m)
+
+monthWeeksBoundaries :: TestTree
+monthWeeksBoundaries =
+  testProperty "first/last day of month in weeks" propBoundary
+  where
+    propBoundary :: Month -> Bool
+    propBoundary m =
+      let w = weekList m
+       in NE.head w == Cal.periodFirstDay m
+            && NE.last w == Cal.periodLastDay m
+
+monthWeekStartOfWeek :: TestTree
+monthWeekStartOfWeek = testProperty "start of week" propWeekStart
+  where
+    propWeekStart :: Month -> Cal.DayOfWeek -> Bool
+    propWeekStart m dw =
+      all (\week -> Cal.dayOfWeek (NE.head week) == dw) $
+        NE.tail (monthWeeks m dw) -- Doesn't hold for first week
 
 quickTests :: TestTree
 quickTests =
   testGroup
     "QuickCheck Tests"
     [ monthWeeksAmount,
-      monthWeeksStartOfMonth,
-      monthWeeksOrdered
+      monthWeeksOrdered,
+      monthWeeksBoundaries,
+      monthWeekStartOfWeek
     ]
-
-instance Arbitrary Month where
-  arbitrary = do
-    m <- chooseInteger (1, 12)
-    y <- chooseAny
-    pure $ MkMonth ((y * 12) + (m - 1))
