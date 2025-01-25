@@ -7,7 +7,13 @@ import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month
 import DatePicker.Util
 import Test.Tasty
-import Test.Tasty.QuickCheck as QC
+import Test.Tasty.QuickCheck
+  ( Arbitrary,
+    arbitrary,
+    chooseAny,
+    chooseInteger,
+    testProperty,
+  )
 
 monthWeeksAmount :: TestTree
 monthWeeksAmount =
