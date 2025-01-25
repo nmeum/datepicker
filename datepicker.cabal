@@ -39,7 +39,6 @@ executable datepicker
                     , vty
                     , vty-unix
                     , unix
-                    , optparse-applicative >=0.17.0.0
     hs-source-dirs:   app
     default-language: GHC2021
 

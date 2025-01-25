@@ -4,8 +4,8 @@ module DatePicker.CmdLine
   ( Opts (..),
     CmdTime,
     getTime,
-    cmdOpts,
     optsPeriod,
+    getCmdArgs,
   )
 where
 
@@ -126,3 +126,6 @@ cmdOpts =
         <> OPT.progDesc "Interactively select a date to be printed to stdout"
         <> OPT.header "datepicker - a utility for interactive date selection"
     )
+
+getCmdArgs :: IO Opts
+getCmdArgs = OPT.execParser cmdOpts

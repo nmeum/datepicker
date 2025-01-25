@@ -13,7 +13,7 @@ import Data.Time.LocalTime
     zonedTimeToLocalTime,
   )
 import DatePicker.CmdLine
-  ( cmdOpts,
+  ( getCmdArgs,
     getTime,
     optDuration,
     optFormat,
@@ -31,7 +31,6 @@ import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
 import Graphics.Vty.Platform.Unix.Settings qualified as VU
-import Options.Applicative (execParser)
 import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
 
 isTerm :: E.Event -> Bool
@@ -66,7 +65,7 @@ unixSettings = do
 
 main :: IO ()
 main = do
-  args <- execParser cmdOpts
+  args <- getCmdArgs
   let outFmt = optFormat args
 
   localTime <- zonedTimeToLocalTime <$> getZonedTime
