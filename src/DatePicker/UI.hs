@@ -1,13 +1,13 @@
-module UI (View (..), showView) where
+module DatePicker.UI (View (..), showView) where
 
 import Control.Monad (when)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Time.LocalTime (LocalTime)
+import DatePicker.Util (horizCenter, vertCenter)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
 import System.Exit (exitFailure)
-import Util (horizCenter, vertCenter)
 
 class View a where
   draw :: a -> I.Image

@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module Util
+module DatePicker.Util
   ( Week,
     monthWeeks,
     addWeeks,

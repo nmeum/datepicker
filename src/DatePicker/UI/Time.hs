@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module UI.Time (TimeView, mkTimeView) where
+module DatePicker.UI.Time (TimeView, mkTimeView) where
 
 import Data.Char (digitToInt, isDigit)
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar qualified as Cal
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (todHour, todMin), makeTimeOfDayValid)
+import DatePicker.UI (View (..))
+import DatePicker.Util (format, horizCenter, makePad)
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
-import UI (View (..))
-import Util (format, horizCenter, makePad)
 
 data TimeView = TimeView
   { rawInput :: NE.NonEmpty Int,

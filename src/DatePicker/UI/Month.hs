@@ -1,4 +1,4 @@
-module UI.Month (MonthView, mkMonthView) where
+module DatePicker.UI.Month (MonthView, mkMonthView) where
 
 import Data.Bool (bool)
 import Data.List (find, findIndex)
@@ -7,11 +7,11 @@ import Data.Maybe (fromJust)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.Calendar.Month (Month, addMonths)
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay))
+import DatePicker.UI (View (..))
+import DatePicker.Util
 import Graphics.Vty.Attributes qualified as Attr
 import Graphics.Vty.Image qualified as I
 import Graphics.Vty.Input.Events qualified as E
-import UI (View (..))
-import Util
 
 data MonthView = MonthView
   { months :: [Month],

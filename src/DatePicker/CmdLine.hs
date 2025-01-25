@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module CmdLine
+module DatePicker.CmdLine
   ( Opts (..),
     CmdTime,
     getTime,
@@ -15,8 +15,8 @@ import Data.Time.Calendar.Month (Month, addMonths, pattern YearMonth)
 import Data.Time.Calendar.OrdinalDate (Day, toOrdinalDate)
 import Data.Time.Format qualified as Fmt
 import Data.Time.LocalTime (LocalTime (LocalTime))
+import DatePicker.Util (locale, periodAllMonths)
 import Options.Applicative qualified as OPT
-import Util (locale, periodAllMonths)
 
 data CmdTime = CmdTime String (Maybe String)
 

@@ -2,17 +2,6 @@
 
 module Main where
 
-import CmdLine
-  ( cmdOpts,
-    getTime,
-    optDuration,
-    optFormat,
-    optLogical,
-    optMonday,
-    optNoTime,
-    optTime,
-    optsPeriod,
-  )
 import Control.Exception (throwIO)
 import Data.Time.Calendar qualified as Cal
 import Data.Time.LocalTime
@@ -23,16 +12,27 @@ import Data.Time.LocalTime
     localDay,
     zonedTimeToLocalTime,
   )
+import DatePicker.CmdLine
+  ( cmdOpts,
+    getTime,
+    optDuration,
+    optFormat,
+    optLogical,
+    optMonday,
+    optNoTime,
+    optTime,
+    optsPeriod,
+  )
+import DatePicker.UI qualified as UI
+import DatePicker.UI.Month qualified as M
+import DatePicker.UI.Time qualified as T
+import DatePicker.Util (format)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
 import Graphics.Vty.Platform.Unix.Settings qualified as VU
 import Options.Applicative (execParser)
 import System.Posix.IO (OpenMode (ReadWrite), defaultFileFlags, openFd)
-import UI qualified
-import UI.Month qualified as M
-import UI.Time qualified as T
-import Util (format)
 
 isTerm :: E.Event -> Bool
 isTerm (E.EvKey key _) =
@@ -71,8 +71,8 @@ main = do
 
   localTime <- zonedTimeToLocalTime <$> getZonedTime
   today <- case optTime args of
-            Nothing -> pure $ localDay localTime
-            Just it -> getTime localTime it
+    Nothing -> pure $ localDay localTime
+    Just it -> getTime localTime it
 
   let range = optsPeriod (optDuration args) today
       mview =
