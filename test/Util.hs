@@ -33,7 +33,7 @@ startApplication args dateInput = do
   -- Larger window size is needed for test using the '-y' or '-3' option.
   _ <-
     sendLine
-      ("tmux resize-window -x 512 -y 512")
+      "tmux resize-window -x 512 -y 512"
       Unconditional
 
   let cmd = "datepicker " ++ unwords args ++ " " ++ dateInput
