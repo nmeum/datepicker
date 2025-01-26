@@ -13,7 +13,7 @@ Inspired by [fzf], this utility allows visually selecting a date interactively t
 ### Status
 
 Basic functionally is operational and works.
-The current feature set is currently being stabilized, more advanced features (like fzf-like previews) may be added in the future.
+The currently implemented feature set is presently being stabilized and tested, more advanced features (like [fzf-like previews][fzf preview]) may be added in a future version.
 
 ### Installation
 
@@ -29,7 +29,7 @@ In order to install `datepicker` this way run the following command
 
 ### Tests
 
-A test suite is available, it performs several tests on the TUI using [tmux] and requires the `datepicker` binary in your `$PATH`.
+A test suite is available, it performs several checks on the TUI using [tmux] and requires the `datepicker` binary in your `$PATH`.
 Once these requirements are satisfied, it can be invoked using:
 
 	$ cabal test
@@ -102,3 +102,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [formatTime]: https://hackage.haskell.org/package/time/docs/Data-Time-Format.html#v:formatTime
 [RFC 1123]: https://datatracker.ietf.org/doc/html/rfc1123
 [tmux]: https://tmux.github.io
+[fzf preview]: https://manpages.debian.org/unstable/fzf/fzf.1.en.html#PREVIEW_WINDOW
