@@ -26,7 +26,7 @@ library
                     , time >=1.12.2
                     , vty  >=6.2
                     , optparse-applicative >=0.17.0.0
-    hs-source-dirs:   src
+    hs-source-dirs:   lib
     default-language: GHC2021
 
 executable datepicker
