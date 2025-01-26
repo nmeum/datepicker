@@ -39,7 +39,7 @@ getTime (LocalTime cd _) (CmdTime month Nothing) = do
 
 ------------------------------------------------------------------------
 
-data Duration = OneMonth | ThreeMonths | TwelveMonths
+data Duration = OneMonth | ThreeMonths | TwelveMonths | OneYear
 
 data Opts = Opts
   { optNoTime :: Bool,
@@ -67,6 +67,12 @@ durationParser =
       )
     OPT.<|> OPT.flag'
       TwelveMonths
+      ( OPT.long "twelve"
+          <> OPT.short 'Y'
+          <> OPT.help "Display the next twelve months"
+      )
+    OPT.<|> OPT.flag'
+      OneYear
       ( OPT.long "year"
           <> OPT.short 'y'
           <> OPT.help "Display the entire year"
@@ -116,7 +122,10 @@ optsPeriod OneMonth day = [Cal.dayPeriod day]
 optsPeriod ThreeMonths day =
   let month = Cal.dayPeriod day
    in [addMonths (-1) month, month, addMonths 1 month]
-optsPeriod TwelveMonths day = periodAllMonths (fst $ toOrdinalDate day)
+optsPeriod TwelveMonths day =
+  let month = Cal.dayPeriod day
+   in map (`addMonths` month) [0 .. 11]
+optsPeriod OneYear day = periodAllMonths (fst $ toOrdinalDate day)
 
 cmdOpts :: OPT.ParserInfo Opts
 cmdOpts =

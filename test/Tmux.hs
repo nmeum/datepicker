@@ -77,6 +77,19 @@ selectDateMondayWeekstart =
     sendKeys_ "Enter" Unconditional
     captureDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 CET"
 
+selectDateTwelveMonths :: TestCase sharedEnv
+selectDateTwelveMonths =
+  withTmuxSession' "--twelve option" $ \_ -> do
+    startApplication ["--date-only", "--twelve"] "sep 2025"
+
+    replicateM_ 17 (sendKeys_ "Down" Unconditional)
+    -- selection: 2025-09-15
+    replicateM_ 15 (sendKeys_ "Right" Unconditional)
+    -- selection: 2025-08-11
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Tue, 11 Aug 2026 00:00:00 CET"
+
 selectTime :: TestCase sharedEnv
 selectTime =
   withTmuxSession' "select date and time" $ \_ -> do
@@ -183,6 +196,7 @@ tmuxTests =
       selectDateLogically,
       selectDateWithCustomFormat,
       selectDateMondayWeekstart,
+      selectDateTwelveMonths,
       selectTime,
       selectTimeAndOverflow,
       selectTimeBackspace,
