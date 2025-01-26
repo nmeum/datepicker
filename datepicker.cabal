@@ -61,4 +61,4 @@ test-suite datepicker-test
         tasty,
         tasty-hunit      >=0.10,
         tasty-tmux       >=0.1.0.5,
-        tasty-quickcheck >=0.11.1
+        tasty-quickcheck >=0.10.2

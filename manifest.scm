@@ -23,12 +23,6 @@
     (build-system haskell-build-system)
     (properties '((upstream-name . "time")))
     (inputs (list ghc-random
-                  ghc-quickcheck
-                  ghc-tasty
-                  ghc-tasty-hunit
-                  ghc-tasty-quickcheck
-                  ghc-random
-                  ghc-quickcheck
                   ghc-tasty
                   ghc-tasty-hunit
                   ghc-tasty-quickcheck))
@@ -76,7 +70,7 @@
           ghc-tasty
           ghc-tasty-tmux
           ghc-tasty-hunit
-          ghc-tasty-golden))
+          ghc-tasty-quickcheck))
   (build-system haskell-build-system)
   (arguments
     `(#:phases
