@@ -3,6 +3,7 @@
 module Tmux (tmuxTests) where
 
 import Control.Monad (replicateM_)
+import Data.String (fromString)
 import Test.Tasty
 import Test.Tasty.Tmux
 import Util
@@ -189,6 +190,27 @@ moveSpatiallyHorizAcrossMonths =
     sendKeys_ "Enter" Unconditional
     captureDate >>= assertDate "Sat, 28 Nov 2065 00:00:00 UTC"
 
+changeInitialDateSelection :: TestCase sharedEnv
+changeInitialDateSelection =
+  withTmuxSession' "select a different initial date" $ \_ -> do
+    startApplication ["-d", "-s", "\"Fri, 19 Jun 2065 00:00:00 UTC\""] "jun 2065"
+
+    sendKeys_ "Enter" Unconditional
+    captureDate >>= assertDate "Fri, 19 Jun 2065 00:00:00 UTC"
+
+invalidInitialDateSelection :: TestCase sharedEnv
+invalidInitialDateSelection =
+  withTmuxSession' "select date outside of range" $ \_ -> do
+    _ <-
+      sendLine
+        "datepicker -s \"Fri, 15 May 2065 00:00:00 UTC\" jun 2065"
+        (Substring $ fromString "user error")
+
+    captured <- snapshot >> capture
+    assertCondition
+      (Substring $ fromString "specified date is not in displayed range")
+      captured
+
 tmuxTests :: TestTree
 tmuxTests =
   testTmux'
@@ -202,5 +224,7 @@ tmuxTests =
       selectTimeBackspace,
       moveSpatiallyVertAcrossMonths,
       moveSpatiallyVertBoundary,
-      moveSpatiallyHorizAcrossMonths
+      moveSpatiallyHorizAcrossMonths,
+      changeInitialDateSelection,
+      invalidInitialDateSelection
     ]
