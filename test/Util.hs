@@ -16,7 +16,7 @@ import Test.Tasty.Tmux
 -- Timezone used for the tests, set explicitly to ensure that test results
 -- are deterministic, independent of the value of the TZ environment variable.
 timezone :: String
-timezone = "CET"
+timezone = "UTC"
 
 -- Header written by datepicker, used to detect application startup.
 --

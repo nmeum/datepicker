@@ -30,7 +30,7 @@ selectDateSpatially =
     -- selection: 2024-12-23
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Mon, 23 Dec 2024 00:00:00 CET"
+    captureDate >>= assertDate "Mon, 23 Dec 2024 00:00:00 UTC"
 
 selectDateLogically :: TestCase sharedEnv
 selectDateLogically =
@@ -49,7 +49,7 @@ selectDateLogically =
     -- selection: 2020-02-08
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Sat, 08 Feb 2020 00:00:00 CET"
+    captureDate >>= assertDate "Sat, 08 Feb 2020 00:00:00 UTC"
 
 selectDateWithCustomFormat :: TestCase sharedEnv
 selectDateWithCustomFormat =
@@ -57,7 +57,7 @@ selectDateWithCustomFormat =
     startApplication ["--date-only", "--format", "'%0Y%m%d %Z'"] "July 1998"
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "19980701 CET"
+    captureDate >>= assertDate "19980701 UTC"
 
 selectDateMondayWeekstart :: TestCase sharedEnv
 selectDateMondayWeekstart =
@@ -75,7 +75,7 @@ selectDateMondayWeekstart =
     -- selection: 2025-06-01
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 CET"
+    captureDate >>= assertDate "Mon, 06 Jan 2025 00:00:00 UTC"
 
 selectDateTwelveMonths :: TestCase sharedEnv
 selectDateTwelveMonths =
@@ -88,7 +88,7 @@ selectDateTwelveMonths =
     -- selection: 2025-08-11
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Tue, 11 Aug 2026 00:00:00 CET"
+    captureDate >>= assertDate "Tue, 11 Aug 2026 00:00:00 UTC"
 
 selectTime :: TestCase sharedEnv
 selectTime =
@@ -99,7 +99,7 @@ selectTime =
     sendKeys_ "2342" Unconditional
     sendKeys_ "Enter" Unconditional
 
-    captureDate >>= assertDate "Thu, 01 Mar 1900 23:42:00 CET"
+    captureDate >>= assertDate "Thu, 01 Mar 1900 23:42:00 UTC"
 
 selectTimeAndOverflow :: TestCase sharedEnv
 selectTimeAndOverflow =
@@ -110,7 +110,7 @@ selectTimeAndOverflow =
     sendKeys_ "1111 2222" Unconditional
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Thu, 01 Mar 1900 22:22:00 CET"
+    captureDate >>= assertDate "Thu, 01 Mar 1900 22:22:00 UTC"
 
 selectTimeBackspace :: TestCase sharedEnv
 selectTimeBackspace =
@@ -127,7 +127,7 @@ selectTimeBackspace =
     sendKeys_ "4" Unconditional
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Thu, 01 Mar 1900 14:35:00 CET"
+    captureDate >>= assertDate "Thu, 01 Mar 1900 14:35:00 UTC"
 
 moveSpatiallyVertAcrossMonths :: TestCase sharedEnv
 moveSpatiallyVertAcrossMonths =
@@ -146,7 +146,7 @@ moveSpatiallyVertAcrossMonths =
     -- selection: 2030-01-27
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Sun, 27 Jan 2030 00:00:00 CET"
+    captureDate >>= assertDate "Sun, 27 Jan 2030 00:00:00 UTC"
 
 moveSpatiallyVertBoundary :: TestCase sharedEnv
 moveSpatiallyVertBoundary =
@@ -168,7 +168,7 @@ moveSpatiallyVertBoundary =
     -- selection: 2029-12-31
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Mon, 31 Dec 2029 00:00:00 CET"
+    captureDate >>= assertDate "Mon, 31 Dec 2029 00:00:00 UTC"
 
 moveSpatiallyHorizAcrossMonths :: TestCase sharedEnv
 moveSpatiallyHorizAcrossMonths =
@@ -187,7 +187,7 @@ moveSpatiallyHorizAcrossMonths =
     -- selection: 2065-11-28
 
     sendKeys_ "Enter" Unconditional
-    captureDate >>= assertDate "Sat, 28 Nov 2065 00:00:00 CET"
+    captureDate >>= assertDate "Sat, 28 Nov 2065 00:00:00 UTC"
 
 tmuxTests :: TestTree
 tmuxTests =
