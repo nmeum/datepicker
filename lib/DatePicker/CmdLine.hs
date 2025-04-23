@@ -45,6 +45,7 @@ data Opts = Opts
   { optNoTime :: Bool,
     optLogical :: Bool,
     optFormat :: String,
+    optSelect :: Maybe String,
     optMonday :: Bool,
     optDuration :: Duration,
     optTime :: Maybe CmdTime
@@ -98,14 +99,20 @@ optsParser =
           <> OPT.short 'l'
           <> OPT.help "Always move cursor logically by week/date"
       )
-    <*> OPT.option
-      OPT.str
+    <*> OPT.strOption
       ( OPT.long "format"
           <> OPT.short 'f'
           -- RFC 1123 format as per Go's time package
           <> OPT.value "%a, %d %b %Y %T %Z"
           <> OPT.metavar "FORMAT"
           <> OPT.help "Format in which the date should be output"
+      )
+    <*> OPT.optional
+      ( OPT.strOption $
+          OPT.long "select"
+            <> OPT.short 's'
+            <> OPT.metavar "TIME"
+            <> OPT.help "Selected date in the calendar view, in -f format"
       )
     <*> OPT.switch
       ( OPT.long "monday"

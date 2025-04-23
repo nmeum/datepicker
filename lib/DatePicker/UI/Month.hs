@@ -25,19 +25,28 @@ instance View MonthView where
   draw = drawView
   process = processEvent
 
-mkMonthView :: [Month] -> Cal.Day -> Cal.DayOfWeek -> Bool -> MonthView
+mkMonthView ::
+  [Month] ->
+  Cal.Day ->
+  Cal.DayOfWeek ->
+  Bool ->
+  Maybe MonthView
 mkMonthView ms day firstWeekDay logicMove =
   let week = take 7 (enumFrom firstWeekDay)
       move = if logicMove then MLogical else MSpatial
-   in MonthView ms day 3 move $ NE.fromList week
+   in if ms `hasDay'` day
+        then Just (MonthView ms day 3 move $ NE.fromList week)
+        else Nothing
 
 currentMonth :: MonthView -> Month
 currentMonth MonthView {months = ms, curDay = d} =
   fromJust $ find (\m -> Cal.dayPeriod d == m) ms
 
+hasDay' :: [Month] -> Cal.Day -> Bool
+hasDay' ms d = any (\m -> Cal.dayPeriod d == m) ms
+
 hasDay :: MonthView -> Cal.Day -> Bool
-hasDay MonthView {months = ms} d =
-  any (\m -> Cal.dayPeriod d == m) ms
+hasDay MonthView {months = ms} = hasDay' ms
 
 hasMonth :: MonthView -> Month -> Bool
 hasMonth MonthView {months = ms} m =

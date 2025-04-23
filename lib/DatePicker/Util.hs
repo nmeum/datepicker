@@ -9,6 +9,7 @@ module DatePicker.Util
     vertCenter,
     locale,
     format,
+    parseTime,
     addSep,
     makePad,
     periodAllMonths,
@@ -65,6 +66,9 @@ locale = Fmt.defaultTimeLocale
 
 format :: (Fmt.FormatTime t) => String -> t -> String
 format = Fmt.formatTime locale
+
+parseTime :: (MonadFail m, Fmt.ParseTime t) => Bool -> String -> String -> m t
+parseTime acceptWS = Fmt.parseTimeM acceptWS locale
 
 addSep :: [I.Image] -> [I.Image]
 addSep = intersperse (I.char Attr.defAttr ' ')

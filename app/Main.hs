@@ -20,13 +20,14 @@ import DatePicker.CmdLine
     optLogical,
     optMonday,
     optNoTime,
+    optSelect,
     optTime,
     optsPeriod,
   )
 import DatePicker.UI qualified as UI
 import DatePicker.UI.Month qualified as M
 import DatePicker.UI.Time qualified as T
-import DatePicker.Util (format)
+import DatePicker.Util (format, parseTime)
 import Graphics.Vty qualified as V
 import Graphics.Vty.Input.Events qualified as E
 import Graphics.Vty.Platform.Unix (mkVtyWithSettings)
@@ -66,32 +67,38 @@ unixSettings = do
 main :: IO ()
 main = do
   args <- getCmdArgs
-  let outFmt = optFormat args
+  let dateFmt = optFormat args
 
   localTime <- zonedTimeToLocalTime <$> getZonedTime
   today <- case optTime args of
     Nothing -> pure $ localDay localTime
     Just it -> getTime localTime it
+  selected <- case optSelect args of
+    Nothing -> pure today
+    Just sd -> parseTime False dateFmt sd
 
   let range = optsPeriod (optDuration args) today
       mview =
         M.mkMonthView
           range
-          today
+          selected
           (if optMonday args then Cal.Monday else Cal.Sunday)
           (optLogical args)
+  view <- case mview of
+    Nothing -> fail "specified date is not in displayed range"
+    Just x -> pure x
 
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig
-  lt@(LocalTime date _) <- UI.showView mview isTerm vty
+  lt@(LocalTime date _) <- UI.showView view isTerm vty
 
   timeZone <- getCurrentTimeZone
   let mkZonedTime local = ZonedTime local timeZone
 
   if optNoTime args
-    then V.shutdown vty >> putStrLn (format outFmt $ mkZonedTime lt)
+    then V.shutdown vty >> putStrLn (format dateFmt $ mkZonedTime lt)
     else do
       (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
       (LocalTime _ time) <- UI.showView (T.mkTimeView nowTime lt) isTerm vty
 
       let res = LocalTime date time
-      V.shutdown vty >> putStrLn (format outFmt $ mkZonedTime res)
+      V.shutdown vty >> putStrLn (format dateFmt $ mkZonedTime res)
