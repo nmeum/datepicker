@@ -12,8 +12,7 @@ Inspired by [fzf], this utility allows visually selecting a date interactively t
 
 ### Status
 
-Basic functionally is operational and works.
-The currently implemented feature set is presently being stabilized and tested, more advanced features (like [fzf-like previews][fzf preview]) may be added in a future version.
+The currently implemented feature set works well, more advanced features (like [fzf-like previews][fzf preview]) may be added in a future version.
 
 ### Installation
 
