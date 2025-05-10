@@ -86,7 +86,7 @@ main = do
           (if optMonday args then Cal.Monday else Cal.Sunday)
           (optLogical args)
   view <- case mview of
-    Nothing -> fail "specified date is not in displayed range"
+    Nothing -> fail $ "specified date (" ++ show selDay ++ ") is not in displayed range"
     Just x -> pure x
 
   vty <- unixSettings >>= mkVtyWithSettings V.defaultConfig

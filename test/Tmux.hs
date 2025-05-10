@@ -218,7 +218,7 @@ invalidInitialDateSelection =
 
     captured <- snapshot >> capture
     assertCondition
-      (Substring $ fromString "specified date is not in displayed range")
+      (Substring $ fromString "specified date (2065-05-15) is not in displayed range")
       captured
 
 tmuxTests :: TestTree
