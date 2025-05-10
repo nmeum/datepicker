@@ -198,6 +198,16 @@ changeInitialDateSelection =
     sendKeys_ "Enter" Unconditional
     captureDate >>= assertDate "Fri, 19 Jun 2065 00:00:00 UTC"
 
+changeInitialTimeSelection :: TestCase sharedEnv
+changeInitialTimeSelection =
+  withTmuxSession' "select a different initial date" $ \_ -> do
+    startApplication ["-s", "\"Fri, 19 Jun 2065 23:42:00 UTC\""] "jun 2065"
+
+    sendKeys_ "Enter" (Substring "June")
+    sendKeys_ "Enter" Unconditional
+
+    captureDate >>= assertDate "Fri, 19 Jun 2065 23:42:00 UTC"
+
 invalidInitialDateSelection :: TestCase sharedEnv
 invalidInitialDateSelection =
   withTmuxSession' "select date outside of range" $ \_ -> do
@@ -226,5 +236,6 @@ tmuxTests =
       moveSpatiallyVertBoundary,
       moveSpatiallyHorizAcrossMonths,
       changeInitialDateSelection,
+      changeInitialTimeSelection,
       invalidInitialDateSelection
     ]

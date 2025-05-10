@@ -10,6 +10,7 @@ import Data.Time.LocalTime
     getCurrentTimeZone,
     getZonedTime,
     localDay,
+    localTimeOfDay,
     zonedTimeToLocalTime,
   )
 import DatePicker.CmdLine
@@ -70,18 +71,18 @@ main = do
   let dateFmt = optFormat args
 
   localTime <- zonedTimeToLocalTime <$> getZonedTime
-  today <- case optTime args of
+  baseDay <- case optTime args of
     Nothing -> pure $ localDay localTime
     Just it -> getTime localTime it
-  selected <- case optSelect args of
-    Nothing -> pure today
+  LocalTime selDay selTime <- case optSelect args of
+    Nothing -> pure (LocalTime baseDay $ localTimeOfDay localTime)
     Just sd -> parseTime False dateFmt sd
 
-  let range = optsPeriod (optDuration args) today
+  let range = optsPeriod (optDuration args) baseDay
       mview =
         M.mkMonthView
           range
-          selected
+          selDay
           (if optMonday args then Cal.Monday else Cal.Sunday)
           (optLogical args)
   view <- case mview of
@@ -97,8 +98,7 @@ main = do
   if optNoTime args
     then V.shutdown vty >> putStrLn (format dateFmt $ mkZonedTime lt)
     else do
-      (LocalTime _ nowTime) <- zonedTimeToLocalTime <$> getZonedTime
-      (LocalTime _ time) <- UI.showView (T.mkTimeView nowTime lt) isTerm vty
+      (LocalTime _ time) <- UI.showView (T.mkTimeView selTime lt) isTerm vty
 
       let res = LocalTime date time
       V.shutdown vty >> putStrLn (format dateFmt $ mkZonedTime res)

@@ -112,7 +112,7 @@ optsParser =
           OPT.long "select"
             <> OPT.short 's'
             <> OPT.metavar "TIME"
-            <> OPT.help "Selected date in the calendar view, in -f format"
+            <> OPT.help "Preselect date/time, in the -f format"
       )
     <*> OPT.switch
       ( OPT.long "monday"
