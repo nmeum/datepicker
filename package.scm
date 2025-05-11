@@ -55,7 +55,7 @@
 
 (package
   (name "datepicker")
-  (version "0.1.0")
+  (version "1.0.1")
   (source (local-file "." "git-checkout"
                       #:recursive? #t))
   (inputs
