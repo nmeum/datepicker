@@ -53,7 +53,6 @@ A few example usages are provided below.
 	$ mlist ~/mail/INBOX | mpick -t "date >= \"$(datepicker -d -f %Y-%m-%d)\""
 
 Refer to the `--help` output for an overview of all supported command-line options.
-The command-line interface is still subject to change, more options will likely be added in future versions.
 
 ### Key Bindings
 
